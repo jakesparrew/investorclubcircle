@@ -7,6 +7,7 @@ import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { createComment, toggleReaction, toggleBookmark, votePoll } from "@/lib/community";
 import { generateSocialVariants } from "@/lib/ai";
+import { reportContent } from "@/lib/moderation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Prisma } from "@prisma/client";
@@ -145,6 +146,14 @@ export default async function PostPage({
               </Button>
             </form>
           )}
+          <form action={reportContent}>
+            <input type="hidden" name="targetType" value="post" />
+            <input type="hidden" name="targetId" value={post.id} />
+            <input type="hidden" name="redirectPath" value={path} />
+            <Button type="submit" size="sm" variant="ghost">
+              ⚑ Rapporteer
+            </Button>
+          </form>
         </div>
       </article>
 
@@ -180,6 +189,14 @@ export default async function PostPage({
                 {comment.author.name ?? comment.author.email}
               </div>
               <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{comment.content}</p>
+              <form action={reportContent} className="mt-2">
+                <input type="hidden" name="targetType" value="comment" />
+                <input type="hidden" name="targetId" value={comment.id} />
+                <input type="hidden" name="redirectPath" value={path} />
+                <button type="submit" className="text-xs text-neutral-400 hover:text-neutral-700">
+                  ⚑ rapporteer
+                </button>
+              </form>
             </div>
           ))}
         </div>

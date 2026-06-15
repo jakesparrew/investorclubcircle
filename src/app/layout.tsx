@@ -1,17 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
+import { PWARegister } from "@/components/PWARegister";
 
 export const metadata: Metadata = {
   title: "InvestorClub — Community & Academy",
   description:
     "Het eigen platform van InvestorClub: community, events, livestreams, podcast, cursussen en lidmaatschap.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "InvestorClub", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#171717",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="nl" className="h-full antialiased">
       <body className="flex min-h-full flex-col bg-neutral-50 text-neutral-900">
+        <PWARegister />
         <header className="border-b border-neutral-200 bg-white">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="text-base font-semibold tracking-tight">
