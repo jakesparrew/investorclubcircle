@@ -41,6 +41,39 @@ export async function startDirectByEmail(formData: FormData) {
   redirect(`/messages/${conversationId}`);
 }
 
+/** Start (or reuse) a 1-on-1 conversation with a user by id (from the directory). */
+export async function startDirectByUserId(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const otherId = String(formData.get("userId") ?? "");
+  if (!otherId || otherId === session.user.id) return;
+
+  const other = await db.user.findUnique({ where: { id: otherId } });
+  if (!other) return;
+
+  const mine = await db.conversation.findMany({
+    where: { type: "direct", members: { some: { userId: session.user.id } } },
+    include: { members: true },
+  });
+  const existing = mine.find(
+    (c) => c.members.length === 2 && c.members.some((m) => m.userId === otherId),
+  );
+
+  const conversationId =
+    existing?.id ??
+    (
+      await db.conversation.create({
+        data: {
+          type: "direct",
+          createdById: session.user.id,
+          members: { create: [{ userId: session.user.id }, { userId: otherId }] },
+        },
+      })
+    ).id;
+
+  redirect(`/messages/${conversationId}`);
+}
+
 export async function sendMessage(formData: FormData) {
   const session = await auth();
   if (!session?.user) redirect("/login");

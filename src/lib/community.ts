@@ -9,6 +9,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { awardPoints, awardPointsOnce, POINTS } from "@/lib/points";
+import { notify } from "@/lib/notify";
 
 async function requireSession(): Promise<Session> {
   const session = await auth();
@@ -54,7 +55,20 @@ export async function createComment(formData: FormData) {
     data: { postId, authorId: session.user.id, content, parentId },
   });
   await awardPoints(session.user.id, POINTS.comment, "comment", "comment", comment.id);
-  revalidatePath(`/community/${post.space.slug}/${postId}`);
+
+  // Notify the post author (and the parent comment author on a reply).
+  const by = session.user.name ?? session.user.email ?? "Iemand";
+  const link = `/community/${post.space.slug}/${postId}`;
+  if (post.authorId !== session.user.id) {
+    await notify(post.authorId, "comment", { link, by, title: post.title ?? "je post" });
+  }
+  if (parentId) {
+    const parent = await db.comment.findUnique({ where: { id: parentId }, select: { authorId: true } });
+    if (parent && parent.authorId !== session.user.id && parent.authorId !== post.authorId) {
+      await notify(parent.authorId, "reply", { link, by });
+    }
+  }
+  revalidatePath(link);
 }
 
 export async function toggleReaction(formData: FormData) {

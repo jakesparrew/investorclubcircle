@@ -17,7 +17,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/" className="text-base font-semibold tracking-tight">
               InvestorClub
             </Link>
-            <nav className="flex items-center gap-4 text-sm">
+            <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm">
               <Link href="/community" className="text-neutral-600 hover:text-neutral-900">
                 Community
               </Link>
@@ -38,6 +38,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               </Link>
               <Link href="/messages" className="text-neutral-600 hover:text-neutral-900">
                 Berichten
+              </Link>
+              <Link href="/members" className="text-neutral-600 hover:text-neutral-900">
+                Leden
+              </Link>
+              <Link href="/notifications" className="text-neutral-600 hover:text-neutral-900">
+                Meldingen
               </Link>
               <Link href="/pricing" className="text-neutral-600 hover:text-neutral-900">
                 Lidmaatschap
