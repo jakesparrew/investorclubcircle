@@ -1122,3 +1122,57 @@ model NewsletterIssue {
 
   @@index([orgId])
 }
+
+// ─── AI-laag (Fase 7) ───────────────────────────────────────────────────────
+
+enum AIJobType {
+  social_variants
+  summary
+}
+
+enum AIJobStatus {
+  queued
+  running
+  review
+  published
+  failed
+}
+
+enum SocialPlatform {
+  instagram
+  linkedin
+  x
+}
+
+enum SocialPostStatus {
+  draft
+  approved
+  published
+}
+
+model AIJob {
+  id           String      @id @default(cuid())
+  orgId        String
+  type         AIJobType
+  inputRef     String
+  status       AIJobStatus @default(queued)
+  output       Json?
+  approvedById String?
+  createdAt    DateTime    @default(now())
+
+  @@index([orgId])
+}
+
+model SocialPost {
+  id           String           @id @default(cuid())
+  orgId        String
+  source       String?
+  platform     SocialPlatform
+  content      String
+  status       SocialPostStatus @default(draft)
+  externalId   String?
+  scheduledFor DateTime?
+  createdAt    DateTime         @default(now())
+
+  @@index([orgId])
+}

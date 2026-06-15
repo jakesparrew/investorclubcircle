@@ -6,6 +6,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { createComment, toggleReaction, toggleBookmark, votePoll } from "@/lib/community";
+import { generateSocialVariants } from "@/lib/ai";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Prisma } from "@prisma/client";
@@ -136,6 +137,14 @@ export default async function PostPage({
               ☆ Bewaar
             </Button>
           </form>
+          {(session.user.role === "ADMIN" || session.user.role === "EXPERT") && (
+            <form action={generateSocialVariants}>
+              <input type="hidden" name="postId" value={post.id} />
+              <Button type="submit" size="sm" variant="ghost">
+                ✨ AI: social
+              </Button>
+            </form>
+          )}
         </div>
       </article>
 
