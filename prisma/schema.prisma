@@ -129,6 +129,8 @@ model Organization {
   offers      Offer[]
   promotions  Promotion[]
   memberTags  MemberTag[]
+  spaceGroups SpaceGroup[]
+  levels      Level[]
 }
 
 // ─── Auth.js models (required by @auth/prisma-adapter) ──────────────────────
@@ -155,6 +157,18 @@ model User {
   tags                UserTag[]
   auditLogs           AuditLog[]           @relation("AuditActor")
   onboarding          UserOnboardingProgress[]
+
+  // Community (Fase 2)
+  profile       Profile?
+  posts         Post[]
+  comments      Comment[]
+  reactions     Reaction[]
+  pollVotes     PollVote[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  reports       Report[]
+  points        PointsLedger[]
+  badges        UserBadge[]
 }
 
 model Account {
@@ -512,4 +526,219 @@ model AuditLog {
   actor User? @relation("AuditActor", fields: [actorId], references: [id])
 
   @@index([actorId])
+}
+
+// ─── Community (Fase 2) ─────────────────────────────────────────────────────
+
+model Profile {
+  userId    String   @id
+  bio       String?
+  headline  String?
+  expertise String[]
+  links     Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SpaceGroup {
+  id        String  @id @default(cuid())
+  orgId     String
+  name      String
+  sortOrder Int     @default(0)
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  spaces Space[]
+
+  @@index([orgId])
+}
+
+model Space {
+  id           String  @id @default(cuid())
+  spaceGroupId String
+  name         String
+  slug         String  @unique
+  description  String?
+  isPublic     Boolean @default(false)
+  minTier      String? // null | free | basis | premium
+  sortOrder    Int     @default(0)
+
+  group SpaceGroup @relation(fields: [spaceGroupId], references: [id], onDelete: Cascade)
+  posts Post[]
+
+  @@index([spaceGroupId])
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  spaceId   String
+  authorId  String
+  title     String?
+  content   String
+  pinned    Boolean   @default(false)
+  hiddenAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  space    Space     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  poll     Poll?
+
+  @@index([spaceId])
+  @@index([authorId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  authorId  String
+  parentId  String?
+  content   String
+  hiddenAt  DateTime?
+  createdAt DateTime  @default(now())
+
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([postId])
+}
+
+model Reaction {
+  id         String   @id @default(cuid())
+  targetType String // "post" | "comment"
+  targetId   String
+  userId     String
+  type       String   @default("like")
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([targetType, targetId, userId, type])
+  @@index([targetType, targetId])
+}
+
+model Poll {
+  id            String       @id @default(cuid())
+  postId        String       @unique
+  question      String
+  allowMultiple Boolean      @default(false)
+  closesAt      DateTime?
+
+  post    Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options PollOption[]
+}
+
+model PollOption {
+  id        String @id @default(cuid())
+  pollId    String
+  text      String
+  sortOrder Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@index([pollId])
+}
+
+model PollVote {
+  id           String   @id @default(cuid())
+  pollOptionId String
+  userId       String
+  createdAt    DateTime @default(now())
+
+  option PollOption @relation(fields: [pollOptionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollOptionId, userId])
+  @@index([pollOptionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  targetType String // post | lesson | event
+  targetId   String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  targetType String
+  targetId   String
+  reason     String
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+// ─── Gamification (Fase 2) ──────────────────────────────────────────────────
+
+model PointsLedger {
+  id         String   @id @default(cuid())
+  userId     String
+  points     Int
+  reason     String
+  sourceType String?
+  sourceId   String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Level {
+  id        String @id @default(cuid())
+  orgId     String
+  rank      Int
+  name      String
+  minPoints Int
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, rank])
+}
+
+model Badge {
+  id    String  @id @default(cuid())
+  key   String  @unique
+  name  String
+  icon  String?
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@index([badgeId])
 }

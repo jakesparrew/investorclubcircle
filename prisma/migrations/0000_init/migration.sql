@@ -378,6 +378,190 @@ CREATE TABLE "AuditLog" (
     CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Profile" (
+    "userId" TEXT NOT NULL,
+    "bio" TEXT,
+    "headline" TEXT,
+    "expertise" TEXT[],
+    "links" JSONB,
+
+    CONSTRAINT "Profile_pkey" PRIMARY KEY ("userId")
+);
+
+-- CreateTable
+CREATE TABLE "SpaceGroup" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "SpaceGroup_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Space" (
+    "id" TEXT NOT NULL,
+    "spaceGroupId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "description" TEXT,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "minTier" TEXT,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Space_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Post" (
+    "id" TEXT NOT NULL,
+    "spaceId" TEXT NOT NULL,
+    "authorId" TEXT NOT NULL,
+    "title" TEXT,
+    "content" TEXT NOT NULL,
+    "pinned" BOOLEAN NOT NULL DEFAULT false,
+    "hiddenAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Comment" (
+    "id" TEXT NOT NULL,
+    "postId" TEXT NOT NULL,
+    "authorId" TEXT NOT NULL,
+    "parentId" TEXT,
+    "content" TEXT NOT NULL,
+    "hiddenAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Reaction" (
+    "id" TEXT NOT NULL,
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'like',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Reaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Poll" (
+    "id" TEXT NOT NULL,
+    "postId" TEXT NOT NULL,
+    "question" TEXT NOT NULL,
+    "allowMultiple" BOOLEAN NOT NULL DEFAULT false,
+    "closesAt" TIMESTAMP(3),
+
+    CONSTRAINT "Poll_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PollOption" (
+    "id" TEXT NOT NULL,
+    "pollId" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "PollOption_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PollVote" (
+    "id" TEXT NOT NULL,
+    "pollOptionId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PollVote_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Bookmark" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Bookmark_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "payload" JSONB,
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Report" (
+    "id" TEXT NOT NULL,
+    "reporterId" TEXT NOT NULL,
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'open',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Report_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PointsLedger" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "points" INTEGER NOT NULL,
+    "reason" TEXT NOT NULL,
+    "sourceType" TEXT,
+    "sourceId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PointsLedger_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Level" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "rank" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "minPoints" INTEGER NOT NULL,
+
+    CONSTRAINT "Level_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Badge" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "icon" TEXT,
+
+    CONSTRAINT "Badge_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserBadge" (
+    "userId" TEXT NOT NULL,
+    "badgeId" TEXT NOT NULL,
+    "awardedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserBadge_pkey" PRIMARY KEY ("userId","badgeId")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -483,6 +667,66 @@ CREATE UNIQUE INDEX "WebhookEvent_stripeEventId_key" ON "WebhookEvent"("stripeEv
 -- CreateIndex
 CREATE INDEX "AuditLog_actorId_idx" ON "AuditLog"("actorId");
 
+-- CreateIndex
+CREATE INDEX "SpaceGroup_orgId_idx" ON "SpaceGroup"("orgId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Space_slug_key" ON "Space"("slug");
+
+-- CreateIndex
+CREATE INDEX "Space_spaceGroupId_idx" ON "Space"("spaceGroupId");
+
+-- CreateIndex
+CREATE INDEX "Post_spaceId_idx" ON "Post"("spaceId");
+
+-- CreateIndex
+CREATE INDEX "Post_authorId_idx" ON "Post"("authorId");
+
+-- CreateIndex
+CREATE INDEX "Comment_postId_idx" ON "Comment"("postId");
+
+-- CreateIndex
+CREATE INDEX "Reaction_targetType_targetId_idx" ON "Reaction"("targetType", "targetId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Reaction_targetType_targetId_userId_type_key" ON "Reaction"("targetType", "targetId", "userId", "type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Poll_postId_key" ON "Poll"("postId");
+
+-- CreateIndex
+CREATE INDEX "PollOption_pollId_idx" ON "PollOption"("pollId");
+
+-- CreateIndex
+CREATE INDEX "PollVote_pollOptionId_idx" ON "PollVote"("pollOptionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PollVote_pollOptionId_userId_key" ON "PollVote"("pollOptionId", "userId");
+
+-- CreateIndex
+CREATE INDEX "Bookmark_userId_idx" ON "Bookmark"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bookmark_userId_targetType_targetId_key" ON "Bookmark"("userId", "targetType", "targetId");
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_idx" ON "Notification"("userId");
+
+-- CreateIndex
+CREATE INDEX "Report_status_idx" ON "Report"("status");
+
+-- CreateIndex
+CREATE INDEX "PointsLedger_userId_idx" ON "PointsLedger"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Level_orgId_rank_key" ON "Level"("orgId", "rank");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Badge_key_key" ON "Badge"("key");
+
+-- CreateIndex
+CREATE INDEX "UserBadge_badgeId_idx" ON "UserBadge"("badgeId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -569,3 +813,63 @@ ALTER TABLE "UserOnboardingProgress" ADD CONSTRAINT "UserOnboardingProgress_user
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpaceGroup" ADD CONSTRAINT "SpaceGroup_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Space" ADD CONSTRAINT "Space_spaceGroupId_fkey" FOREIGN KEY ("spaceGroupId") REFERENCES "SpaceGroup"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_spaceId_fkey" FOREIGN KEY ("spaceId") REFERENCES "Space"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Comment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Poll" ADD CONSTRAINT "Poll_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PollOption" ADD CONSTRAINT "PollOption_pollId_fkey" FOREIGN KEY ("pollId") REFERENCES "Poll"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PollVote" ADD CONSTRAINT "PollVote_pollOptionId_fkey" FOREIGN KEY ("pollOptionId") REFERENCES "PollOption"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PollVote" ADD CONSTRAINT "PollVote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Bookmark" ADD CONSTRAINT "Bookmark_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Report" ADD CONSTRAINT "Report_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PointsLedger" ADD CONSTRAINT "PointsLedger_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Level" ADD CONSTRAINT "Level_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_badgeId_fkey" FOREIGN KEY ("badgeId") REFERENCES "Badge"("id") ON DELETE CASCADE ON UPDATE CASCADE;

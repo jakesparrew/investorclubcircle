@@ -56,13 +56,79 @@ async function main() {
   }
 
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "gaetanjansseune@gmail.com";
-  await db.user.upsert({
+  const admin = await db.user.upsert({
     where: { email: adminEmail },
     update: { role: "ADMIN" },
     create: { email: adminEmail, name: "Gaetan", role: "ADMIN" },
   });
 
-  console.log(`Seed complete: org=${org.name}, tiers=${tiers.length}, admin=${adminEmail}`);
+  // ─── Community (Fase 2) ───────────────────────────────────────────────────
+  const groups = [
+    { id: "sg_algemeen", name: "Algemeen", sortOrder: 0 },
+    { id: "sg_markten", name: "Markten", sortOrder: 1 },
+  ];
+  for (const g of groups) {
+    await db.spaceGroup.upsert({
+      where: { id: g.id },
+      update: { name: g.name, sortOrder: g.sortOrder, orgId: org.id },
+      create: { id: g.id, orgId: org.id, name: g.name, sortOrder: g.sortOrder },
+    });
+  }
+
+  const spaces = [
+    { id: "sp_aankondigingen", spaceGroupId: "sg_algemeen", name: "Aankondigingen", slug: "aankondigingen", description: "Nieuws van het team.", isPublic: true, minTier: null as string | null, sortOrder: 0 },
+    { id: "sp_introducties", spaceGroupId: "sg_algemeen", name: "Introducties", slug: "introducties", description: "Stel jezelf voor.", isPublic: false, minTier: "free", sortOrder: 1 },
+    { id: "sp_crypto", spaceGroupId: "sg_markten", name: "Crypto", slug: "crypto", description: "Bitcoin, altcoins, on-chain.", isPublic: false, minTier: "basis", sortOrder: 0 },
+    { id: "sp_premium", spaceGroupId: "sg_markten", name: "Premium analyses", slug: "premium-analyses", description: "Diepgaande analyses voor premium-leden.", isPublic: false, minTier: "premium", sortOrder: 1 },
+  ];
+  for (const s of spaces) {
+    await db.space.upsert({
+      where: { id: s.id },
+      update: { name: s.name, slug: s.slug, description: s.description, isPublic: s.isPublic, minTier: s.minTier, sortOrder: s.sortOrder, spaceGroupId: s.spaceGroupId },
+      create: s,
+    });
+  }
+
+  await db.post.upsert({
+    where: { id: "post_welcome" },
+    update: {},
+    create: {
+      id: "post_welcome",
+      spaceId: "sp_aankondigingen",
+      authorId: admin.id,
+      title: "Welkom bij InvestorClub 👋",
+      content: "Welkom op het nieuwe platform! Stel jezelf voor in Introducties en verdien je eerste punten.",
+      pinned: true,
+    },
+  });
+
+  // ─── Gamification (Fase 2) ────────────────────────────────────────────────
+  const levels = [
+    { rank: 1, name: "Starter", minPoints: 0 },
+    { rank: 2, name: "Actief lid", minPoints: 50 },
+    { rank: 3, name: "Bijdrager", minPoints: 200 },
+    { rank: 4, name: "Expert", minPoints: 500 },
+    { rank: 5, name: "Legende", minPoints: 1000 },
+  ];
+  for (const l of levels) {
+    await db.level.upsert({
+      where: { orgId_rank: { orgId: org.id, rank: l.rank } },
+      update: { name: l.name, minPoints: l.minPoints },
+      create: { orgId: org.id, rank: l.rank, name: l.name, minPoints: l.minPoints },
+    });
+  }
+
+  const badges = [
+    { key: "founding", name: "Founding member", icon: "🌟" },
+    { key: "first_post", name: "Eerste post", icon: "✍️" },
+  ];
+  for (const b of badges) {
+    await db.badge.upsert({ where: { key: b.key }, update: { name: b.name, icon: b.icon }, create: b });
+  }
+
+  console.log(
+    `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, levels=${levels.length}, admin=${adminEmail}`,
+  );
 }
 
 main()

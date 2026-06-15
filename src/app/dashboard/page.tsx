@@ -4,6 +4,8 @@ import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
+import { getUserTotalPoints, getLevelForPoints } from "@/lib/points";
+import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +19,12 @@ export default async function DashboardPage() {
   let tierLabel = "free";
   let statusLabel = "geen abonnement";
   let premiumOk = false;
+  let orgId: string | null = null;
+  let points = 0;
+  let levelName = "—";
   try {
+    const org = await db.organization.findFirst();
+    orgId = org?.id ?? null;
     const membership = await db.membership.findFirst({
       where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
       include: { tier: true },
@@ -29,6 +36,11 @@ export default async function DashboardPage() {
     }
     const ctx = await getAccessContext(session.user.id, session.user.role);
     premiumOk = canAccess(ctx, { minTier: "premium" }).ok;
+    points = await getUserTotalPoints(session.user.id);
+    if (orgId) {
+      const level = await getLevelForPoints(orgId, points);
+      if (level) levelName = level.name;
+    }
   } catch {
     // Database not connected yet — show defaults.
   }
@@ -70,6 +82,12 @@ export default async function DashboardPage() {
               <span className="text-neutral-500">Abonnement</span>
               <span className="font-medium">{statusLabel}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Punten</span>
+              <span className="font-medium">
+                {points} · {levelName}
+              </span>
+            </div>
           </CardContent>
         </Card>
 
@@ -101,6 +119,12 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {orgId && (
+        <div className="mt-6">
+          <OnboardingChecklist userId={session.user.id} orgId={orgId} />
+        </div>
+      )}
 
       {session.user.role === "ADMIN" && (
         <div className="mt-6">

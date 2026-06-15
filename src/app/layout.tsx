@@ -18,6 +18,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               InvestorClub
             </Link>
             <nav className="flex items-center gap-4 text-sm">
+              <Link href="/community" className="text-neutral-600 hover:text-neutral-900">
+                Community
+              </Link>
+              <Link href="/leaderboard" className="text-neutral-600 hover:text-neutral-900">
+                Leaderboard
+              </Link>
               <Link href="/pricing" className="text-neutral-600 hover:text-neutral-900">
                 Lidmaatschap
               </Link>
