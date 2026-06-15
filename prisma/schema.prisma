@@ -136,6 +136,7 @@ model Organization {
   courses     Course[]
   livestreams Livestream[]
   newsletters NewsletterIssue[]
+  podcast     PodcastEpisode[]
 }
 
 // ─── Auth.js models (required by @auth/prisma-adapter) ──────────────────────
@@ -1173,6 +1174,19 @@ model SocialPost {
   externalId   String?
   scheduledFor DateTime?
   createdAt    DateTime         @default(now())
+
+  @@index([orgId])
+}
+
+model PodcastEpisode {
+  id          String   @id @default(cuid())
+  orgId       String
+  title       String
+  description String?
+  audioUrl    String
+  publishedAt DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
 }
