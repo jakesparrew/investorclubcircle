@@ -4,10 +4,12 @@ import { toggleTierActiveAction } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney } from "@/lib/utils";
+import { requireAdminPage } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminTiersPage() {
+  await requireAdminPage();
   let tiers: Tier[] = [];
   let dbError = false;
   try {

@@ -18,6 +18,8 @@ export async function setUserRoleAction(formData: FormData) {
   if (!userId || !["MEMBER", "EXPERT", "ADMIN"].includes(role)) return;
 
   await db.user.update({ where: { id: userId }, data: { role } });
+  // Invalidate existing sessions so the new role takes effect immediately.
+  await db.session.deleteMany({ where: { userId } });
   await db.auditLog.create({
     data: {
       actorId: session.user.id,

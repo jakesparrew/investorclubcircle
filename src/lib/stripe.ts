@@ -1,9 +1,20 @@
 import Stripe from "stripe";
 
+// Fail loud in production if the secret is missing; allow a placeholder in
+// dev/build so the app boots without real keys.
+function stripeSecret(): string {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (key) return key;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("STRIPE_SECRET_KEY is required in production");
+  }
+  return "sk_test_placeholder";
+}
+
 // Platform-account client. Connect direct-charge calls are scoped per-request
 // with `{ stripeAccount }` (see helpers). apiVersion is the literal the
 // installed stripe@22 types accept.
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder", {
+export const stripe = new Stripe(stripeSecret(), {
   apiVersion: "2026-05-27.dahlia",
   typescript: true,
 });

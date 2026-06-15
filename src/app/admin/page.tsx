@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireAdminPage } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
+  await requireAdminPage();
   let stats = { users: 0, activeMembers: 0, orders: 0, tiers: 0 };
   let dbError = false;
   try {

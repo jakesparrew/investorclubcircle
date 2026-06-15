@@ -19,8 +19,9 @@ export default async function DashboardPage() {
   let premiumOk = false;
   try {
     const membership = await db.membership.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
       include: { tier: true },
+      orderBy: { startedAt: "desc" },
     });
     if (membership) {
       tierLabel = membership.tier.key;

@@ -34,10 +34,21 @@ function idOf(ref: string | { id: string } | null | undefined): string | null {
 async function upsertMembershipFromSubscription(sub: Stripe.Subscription) {
   const userId = sub.metadata?.userId;
   const orgId = sub.metadata?.orgId;
-  const tierId = sub.metadata?.tierId;
+  const item = sub.items.data[0];
+
+  // Prefer tierId from checkout metadata; fall back to resolving by the price id
+  // (covers portal-initiated plan changes where metadata is stale/absent).
+  let tierId: string | undefined = sub.metadata?.tierId;
+  if (!tierId && item?.price?.id) {
+    const matched = await db.tier.findFirst({
+      where: {
+        OR: [{ stripePriceMonthlyId: item.price.id }, { stripePriceYearlyId: item.price.id }],
+      },
+    });
+    tierId = matched?.id;
+  }
   if (!userId || !orgId || !tierId) return;
 
-  const item = sub.items.data[0];
   // In recent API versions billing periods live on the item; fall back to the sub.
   const periodEndUnix: number | undefined =
     (item as unknown as { current_period_end?: number })?.current_period_end ??
@@ -65,34 +76,35 @@ async function upsertMembershipFromSubscription(sub: Stripe.Subscription) {
 async function markOrderPaid(opts: {
   checkoutSessionId?: string | null;
   paymentIntentId?: string | null;
-  userId?: string | null;
-  amount?: number | null;
   feeAmount?: number | null;
 }) {
   const order = opts.checkoutSessionId
     ? await db.order.findUnique({ where: { stripeCheckoutSessionId: opts.checkoutSessionId } })
-    : null;
-  if (order) {
-    await db.order.update({
-      where: { id: order.id },
-      data: {
-        status: OrderStatus.paid,
-        stripePaymentIntentId: opts.paymentIntentId ?? order.stripePaymentIntentId,
-        applicationFeeAmount: opts.feeAmount ?? order.applicationFeeAmount,
-      },
-    });
-    await db.payment.create({
-      data: {
-        userId: order.userId,
-        kind: PaymentKind.one_time,
-        amount: order.amount,
-        currency: order.currency,
-        applicationFeeAmount: opts.feeAmount ?? order.applicationFeeAmount,
-        stripePaymentIntentId: opts.paymentIntentId ?? order.stripePaymentIntentId,
-        status: PaymentStatus.succeeded,
-      },
-    });
-  }
+    : opts.paymentIntentId
+      ? await db.order.findFirst({ where: { stripePaymentIntentId: opts.paymentIntentId } })
+      : null;
+  if (!order) return;
+  if (order.status === OrderStatus.paid) return; // idempotent — already recorded
+
+  await db.order.update({
+    where: { id: order.id },
+    data: {
+      status: OrderStatus.paid,
+      stripePaymentIntentId: opts.paymentIntentId ?? order.stripePaymentIntentId,
+      applicationFeeAmount: opts.feeAmount ?? order.applicationFeeAmount,
+    },
+  });
+  await db.payment.create({
+    data: {
+      userId: order.userId,
+      kind: PaymentKind.one_time,
+      amount: order.amount,
+      currency: order.currency,
+      applicationFeeAmount: opts.feeAmount ?? order.applicationFeeAmount,
+      stripePaymentIntentId: opts.paymentIntentId ?? order.stripePaymentIntentId,
+      status: PaymentStatus.succeeded,
+    },
+  });
 }
 
 /**
@@ -114,7 +126,6 @@ export async function syncStripeEvent(event: Stripe.Event): Promise<void> {
         await markOrderPaid({
           checkoutSessionId: s.id,
           paymentIntentId: idOf(s.payment_intent),
-          amount: s.amount_total,
         });
       }
       // subscription mode is handled by the customer.subscription.* events.
@@ -174,7 +185,7 @@ export async function syncStripeEvent(event: Stripe.Event): Promise<void> {
 
     case "payment_intent.succeeded": {
       const pi = event.data.object as Stripe.PaymentIntent;
-      await markOrderPaid({ paymentIntentId: pi.id, amount: pi.amount });
+      await markOrderPaid({ paymentIntentId: pi.id });
       break;
     }
 

@@ -25,8 +25,8 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, secret);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown error";
-    return new Response(`Webhook signature verification failed: ${message}`, { status: 400 });
+    console.error("[stripe webhook] signature verification failed:", err);
+    return new Response("Invalid signature", { status: 400 });
   }
 
   // Idempotency: skip events we've already processed.
@@ -39,9 +39,9 @@ export async function POST(req: Request) {
     await syncStripeEvent(event);
     await db.webhookEvent.create({ data: { stripeEventId: event.id, type: event.type } });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown error";
+    console.error("[stripe webhook] handler error:", err);
     // Return 500 so Stripe retries; the event is NOT marked processed.
-    return new Response(`Webhook handler error: ${message}`, { status: 500 });
+    return new Response("Webhook handler error", { status: 500 });
   }
 
   return Response.json({ received: true });

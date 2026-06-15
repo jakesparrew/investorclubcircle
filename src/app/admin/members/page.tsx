@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { setUserRoleAction } from "@/lib/admin";
+import { requireAdminPage } from "@/lib/guards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,6 +12,7 @@ const ROLES = ["MEMBER", "EXPERT", "ADMIN"] as const;
 type MemberRow = Prisma.UserGetPayload<{ include: { memberships: { include: { tier: true } } } }>;
 
 export default async function AdminMembersPage() {
+  await requireAdminPage();
   let users: MemberRow[] = [];
   let dbError = false;
   try {

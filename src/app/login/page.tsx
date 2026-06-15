@@ -2,10 +2,18 @@ import { magicLinkSignIn, googleSignIn } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { safeRedirectPath } from "@/lib/guards";
 
 export const metadata = { title: "Inloggen — InvestorClub" };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  const target = safeRedirectPath(callbackUrl);
+
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <Card>
@@ -15,6 +23,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <form action={googleSignIn}>
+            <input type="hidden" name="callbackUrl" value={target} />
             <Button type="submit" variant="outline" className="w-full">
               Verder met Google
             </Button>
@@ -27,6 +36,7 @@ export default function LoginPage() {
           </div>
 
           <form action={magicLinkSignIn} className="flex flex-col gap-3">
+            <input type="hidden" name="callbackUrl" value={target} />
             <Input type="email" name="email" placeholder="jij@email.be" required autoComplete="email" />
             <Button type="submit" className="w-full">
               Stuur magische link

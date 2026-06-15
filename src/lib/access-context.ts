@@ -16,6 +16,7 @@ export async function getAccessContext(
     db.membership.findFirst({
       where: { userId, status: { in: ["active", "trialing"] } },
       include: { tier: true },
+      orderBy: { startedAt: "desc" },
     }),
     db.order.findMany({
       where: { userId, status: "paid", productId: { not: null } },

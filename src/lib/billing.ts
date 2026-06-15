@@ -12,6 +12,9 @@ async function requireConnectedOrg() {
   if (!org.stripeConnectedAccountId) {
     throw new Error("Organization is not yet connected to Stripe (complete Connect onboarding).");
   }
+  if (org.stripeAccountStatus && org.stripeAccountStatus !== "active") {
+    throw new Error("Stripe-account is nog niet volledig actief.");
+  }
   return org as typeof org & { stripeConnectedAccountId: string };
 }
 
@@ -26,7 +29,7 @@ export async function startSubscriptionCheckout(tierId: string, interval: "month
 
   const org = await requireConnectedOrg();
   const tier = await db.tier.findUnique({ where: { id: tierId } });
-  if (!tier) throw new Error("Tier not found");
+  if (!tier || !tier.active) throw new Error("Tier niet beschikbaar");
 
   const priceId = interval === "year" ? tier.stripePriceYearlyId : tier.stripePriceMonthlyId;
   if (!priceId) throw new Error(`Tier "${tier.key}" has no Stripe price for interval "${interval}"`);
@@ -50,8 +53,14 @@ export async function startProductCheckout(productId: string, priceId: string) {
   if (!session?.user) redirect("/login");
 
   const org = await requireConnectedOrg();
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (!product || !product.active) throw new Error("Product niet beschikbaar");
+
   const price = await db.price.findUnique({ where: { id: priceId } });
-  if (!price || !price.stripePriceId) throw new Error("Price not found or not synced to Stripe");
+  // Validate the price actually belongs to this product (prevents price manipulation).
+  if (!price || price.productId !== productId || !price.active || !price.stripePriceId) {
+    throw new Error("Ongeldige prijs voor dit product");
+  }
 
   const order = await db.order.create({
     data: {

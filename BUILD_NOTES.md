@@ -55,6 +55,27 @@ Status van de autonome bouw + wat er nog nodig is. Bijgewerkt 2026-06-15.
 - `stripe-sync.ts` verfijnen met live Connect-events (period-velden zitten in API
   `2026-05-27.dahlia` op subscription items).
 
+## 🔒 Adversariële review — opgelost & opvolging
+
+**Opgelost in deze sessie** (2 reviewers, security + correctness):
+- Checkout-autorisatie: prijs gevalideerd tegen product (anti price-manipulation), tier `active`-check, org `active`-check.
+- Webhook: geen interne foutmeldingen meer in responses (generieke 400/500 + server-log).
+- One-time orders: idempotent (`status === paid` guard) + fallback-lookup op payment_intent.
+- Membership: tier-resolutie via price-id als metadata ontbreekt; `getAccessContext`/dashboard scopen op active/trialing + `orderBy startedAt desc`.
+- Rolwijziging invalideert nu bestaande sessies (`session.deleteMany`).
+- Admin-pagina's hebben eigen server-side guard (`requireAdminPage`), niet enkel de layout.
+- Veilige `callbackUrl` (alleen same-origin paden) na login.
+- Stripe-secret: fail-loud in productie, placeholder enkel in dev/build.
+
+**Nog te doen (opvolging):**
+- **Stripe Connect-webhook**: registreer het endpoint als **Connect**-webhook (events "on connected accounts");
+  `STRIPE_WEBHOOK_SECRET` = die endpoint-secret. Met direct charges komen subscription/invoice/charge-events
+  op het connected account binnen (met `event.account`). Zonder Connect-endpoint synct niets.
+- **Rate limiting** op de magic-link-actie (`/login`) — vereist een rate-limit-store (bv. Upstash). Nu nog niet.
+- **Customer hergebruik**: nu maakt elke checkout een nieuwe Stripe-customer (`customer_email`); later de
+  `stripeCustomerId` per gebruiker bewaren en `customer` hergebruiken (voor billing-portal/proratie).
+- **Transitieve vulns** (moderate) in dev/build-tooling (`@hono/node-server` via Prisma Studio, `postcss` via Next) — opvolgen met patch-releases, niet force-fixen.
+
 ## ▶️ Eerste keer draaien (zodra keys live zijn)
 
 ```
