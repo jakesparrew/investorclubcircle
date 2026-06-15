@@ -6,6 +6,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { getUserTotalPoints, getLevelForPoints } from "@/lib/points";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { toggleNewsletterOptIn } from "@/lib/newsletter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,15 @@ export default async function DashboardPage() {
   let orgId: string | null = null;
   let points = 0;
   let levelName = "—";
+  let newsletterOptIn = false;
   try {
     const org = await db.organization.findFirst();
     orgId = org?.id ?? null;
+    const u = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { newsletterOptIn: true },
+    });
+    newsletterOptIn = u?.newsletterOptIn ?? false;
     const membership = await db.membership.findFirst({
       where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
       include: { tier: true },
@@ -116,6 +123,24 @@ export default async function DashboardPage() {
                 </Link>
               )}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card>
+          <CardContent className="flex items-center justify-between pt-6">
+            <div>
+              <div className="font-medium">Nieuwsbrief</div>
+              <div className="text-sm text-neutral-500">
+                {newsletterOptIn ? "Je ontvangt de nieuwsbrief." : "Je bent niet ingeschreven."}
+              </div>
+            </div>
+            <form action={toggleNewsletterOptIn}>
+              <Button type="submit" variant={newsletterOptIn ? "outline" : "default"} size="sm">
+                {newsletterOptIn ? "Uitschrijven" : "Inschrijven"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
