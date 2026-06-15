@@ -48,9 +48,12 @@ Status van de autonome bouw + wat er nog nodig is. Bijgewerkt 2026-06-15.
 - **Intro €1 / Subscription Schedule**: helper + UI nog te bouwen (nu enkel trial + promo).
 - **Affiliate-uitbetaling**: beloning nu free_month/credit; cash-payout via Stripe transfers later.
 - **Gift memberships**: schema + flow aanwezig; verzilver-UI nog bouwen.
-- **Fase 2 Community** (spaces/posts/chat/gamification/onboarding-UI), **Fase 3 Chat**,
-  **Fase 4 Events** (introduceert queue/runner — Inngest vs BullMQ beslissen),
-  **Fase 5 Content-instroom**, **Fase 6 Cursussen**, **Fase 7 AI-laag**, **Fase 8 Verdieping**.
+- **Fase 2 Community** ✅ gebouwd (spaces/posts/comments/reacties/polls/gamification/onboarding).
+  Nog: poll-aanmaak-UI, profielpagina's, notificatie-UI, moderatie-UI, realtime-feed.
+- **Fase 4 Events** ✅ gebouwd (registratie deposit €1/paid/free + wachtlijst + QR-check-in + deposit-refund).
+  Nog: event-aanmaak-UI voor hosts/admin (nu via seed), reminders via queue, agenda-sync (iCal/Google).
+- **Fase 3 Chat** (DM/groep op Supabase Realtime), **Fase 5 Content-instroom** (livestream/podcast/nieuwsbrief),
+  **Fase 6 Cursussen**, **Fase 7 AI-laag** (queue/runner — Inngest vs BullMQ beslissen), **Fase 8 Verdieping**.
 - E2E-tests (Playwright) zodra DB live is; nu enkel unit-tests voor `canAccess()`.
 - `stripe-sync.ts` verfijnen met live Connect-events (period-velden zitten in API
   `2026-05-27.dahlia` op subscription items).

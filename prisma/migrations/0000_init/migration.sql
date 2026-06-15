@@ -49,6 +49,15 @@ CREATE TYPE "PaymentStatus" AS ENUM ('pending', 'succeeded', 'failed', 'refunded
 -- CreateEnum
 CREATE TYPE "DunningOutcome" AS ENUM ('pending', 'recovered', 'failed');
 
+-- CreateEnum
+CREATE TYPE "EventStatus" AS ENUM ('draft', 'published', 'cancelled', 'completed');
+
+-- CreateEnum
+CREATE TYPE "RegistrationType" AS ENUM ('deposit', 'paid', 'free');
+
+-- CreateEnum
+CREATE TYPE "RegistrationStatus" AS ENUM ('pending', 'confirmed', 'waitlisted', 'cancelled', 'refunded');
+
 -- CreateTable
 CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
@@ -562,6 +571,74 @@ CREATE TABLE "UserBadge" (
     CONSTRAINT "UserBadge_pkey" PRIMARY KEY ("userId","badgeId")
 );
 
+-- CreateTable
+CREATE TABLE "EventSeries" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "recurrenceRule" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EventSeries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Event" (
+    "id" TEXT NOT NULL,
+    "orgId" TEXT NOT NULL,
+    "seriesId" TEXT,
+    "hostId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "description" TEXT,
+    "location" TEXT,
+    "startsAt" TIMESTAMP(3) NOT NULL,
+    "endsAt" TIMESTAMP(3),
+    "capacity" INTEGER,
+    "softCap" INTEGER,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "minTier" TEXT,
+    "depositAmount" INTEGER,
+    "nonMemberPrice" INTEGER,
+    "recurrenceRule" TEXT,
+    "reminderOffsets" INTEGER[],
+    "status" "EventStatus" NOT NULL DEFAULT 'draft',
+    "recordingUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Registration" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" "RegistrationType" NOT NULL,
+    "status" "RegistrationStatus" NOT NULL DEFAULT 'pending',
+    "amount" INTEGER,
+    "stripeCheckoutSessionId" TEXT,
+    "stripePaymentIntentId" TEXT,
+    "checkinToken" TEXT NOT NULL,
+    "checkedInAt" TIMESTAMP(3),
+    "waitlistPosition" INTEGER,
+    "refundedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Registration_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "EventReminder" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "offsetMinutes" INTEGER NOT NULL,
+    "channel" TEXT NOT NULL DEFAULT 'email',
+    "scheduledFor" TIMESTAMP(3) NOT NULL,
+    "sentAt" TIMESTAMP(3),
+
+    CONSTRAINT "EventReminder_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -727,6 +804,30 @@ CREATE UNIQUE INDEX "Badge_key_key" ON "Badge"("key");
 -- CreateIndex
 CREATE INDEX "UserBadge_badgeId_idx" ON "UserBadge"("badgeId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Event_slug_key" ON "Event"("slug");
+
+-- CreateIndex
+CREATE INDEX "Event_orgId_idx" ON "Event"("orgId");
+
+-- CreateIndex
+CREATE INDEX "Event_startsAt_idx" ON "Event"("startsAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Registration_stripeCheckoutSessionId_key" ON "Registration"("stripeCheckoutSessionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Registration_checkinToken_key" ON "Registration"("checkinToken");
+
+-- CreateIndex
+CREATE INDEX "Registration_eventId_idx" ON "Registration"("eventId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Registration_eventId_userId_key" ON "Registration"("eventId", "userId");
+
+-- CreateIndex
+CREATE INDEX "EventReminder_eventId_idx" ON "EventReminder"("eventId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -873,3 +974,24 @@ ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_userId_fkey" FOREIGN KEY ("use
 
 -- AddForeignKey
 ALTER TABLE "UserBadge" ADD CONSTRAINT "UserBadge_badgeId_fkey" FOREIGN KEY ("badgeId") REFERENCES "Badge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventSeries" ADD CONSTRAINT "EventSeries_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_seriesId_fkey" FOREIGN KEY ("seriesId") REFERENCES "EventSeries"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Event" ADD CONSTRAINT "Event_hostId_fkey" FOREIGN KEY ("hostId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Registration" ADD CONSTRAINT "Registration_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Registration" ADD CONSTRAINT "Registration_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EventReminder" ADD CONSTRAINT "EventReminder_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;

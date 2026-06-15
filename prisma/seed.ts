@@ -126,6 +126,29 @@ async function main() {
     await db.badge.upsert({ where: { key: b.key }, update: { name: b.name, icon: b.icon }, create: b });
   }
 
+  // ─── Events (Fase 4) ──────────────────────────────────────────────────────
+  await db.event.upsert({
+    where: { slug: "investorclub-live-avond" },
+    update: {},
+    create: {
+      slug: "investorclub-live-avond",
+      orgId: org.id,
+      hostId: admin.id,
+      title: "InvestorClub Live Avond",
+      description: "Een avond met experts over de crypto- en macro-vooruitzichten voor 2026.",
+      location: "Gent",
+      startsAt: new Date("2026-09-15T18:00:00.000Z"),
+      endsAt: new Date("2026-09-15T21:00:00.000Z"),
+      capacity: 100,
+      softCap: 100,
+      isPublic: true,
+      depositAmount: 100, // €1 terugbetaalbare waarborg voor leden
+      nonMemberPrice: 2900, // €29 ticket voor niet-leden
+      status: "published",
+      reminderOffsets: [1440, 60],
+    },
+  });
+
   console.log(
     `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, levels=${levels.length}, admin=${adminEmail}`,
   );

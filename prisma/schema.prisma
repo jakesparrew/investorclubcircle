@@ -131,6 +131,8 @@ model Organization {
   memberTags  MemberTag[]
   spaceGroups SpaceGroup[]
   levels      Level[]
+  events      Event[]
+  eventSeries EventSeries[]
 }
 
 // ─── Auth.js models (required by @auth/prisma-adapter) ──────────────────────
@@ -169,6 +171,10 @@ model User {
   reports       Report[]
   points        PointsLedger[]
   badges        UserBadge[]
+
+  // Events (Fase 4)
+  eventsHosted  Event[]        @relation("EventHost")
+  registrations Registration[]
 }
 
 model Account {
@@ -741,4 +747,105 @@ model UserBadge {
 
   @@id([userId, badgeId])
   @@index([badgeId])
+}
+
+// ─── Events & ticketbalie (Fase 4) ──────────────────────────────────────────
+
+enum EventStatus {
+  draft
+  published
+  cancelled
+  completed
+}
+
+enum RegistrationType {
+  deposit
+  paid
+  free
+}
+
+enum RegistrationStatus {
+  pending
+  confirmed
+  waitlisted
+  cancelled
+  refunded
+}
+
+model EventSeries {
+  id             String   @id @default(cuid())
+  orgId          String
+  recurrenceRule String
+  createdAt      DateTime @default(now())
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  events Event[]
+}
+
+model Event {
+  id              String      @id @default(cuid())
+  orgId           String
+  seriesId        String?
+  hostId          String
+  title           String
+  slug            String      @unique
+  description     String?
+  location        String?
+  startsAt        DateTime
+  endsAt          DateTime?
+  capacity        Int?
+  softCap         Int?
+  isPublic        Boolean     @default(false)
+  minTier         String?
+  depositAmount   Int? // cents — refundable member no-show deposit (e.g. 100 = €1)
+  nonMemberPrice  Int? // cents — paid ticket for non-members
+  recurrenceRule  String?
+  reminderOffsets Int[]
+  status          EventStatus @default(draft)
+  recordingUrl    String?
+  createdAt       DateTime    @default(now())
+
+  org           Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  series        EventSeries?    @relation(fields: [seriesId], references: [id])
+  host          User            @relation("EventHost", fields: [hostId], references: [id])
+  registrations Registration[]
+  reminders     EventReminder[]
+
+  @@index([orgId])
+  @@index([startsAt])
+}
+
+model Registration {
+  id                      String             @id @default(cuid())
+  eventId                 String
+  userId                  String
+  type                    RegistrationType
+  status                  RegistrationStatus @default(pending)
+  amount                  Int?
+  stripeCheckoutSessionId String?            @unique
+  stripePaymentIntentId   String?
+  checkinToken            String             @unique
+  checkedInAt             DateTime?
+  waitlistPosition        Int?
+  refundedAt              DateTime?
+  createdAt               DateTime           @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+}
+
+model EventReminder {
+  id            String    @id @default(cuid())
+  eventId       String
+  offsetMinutes Int
+  channel       String    @default("email")
+  scheduledFor  DateTime
+  sentAt        DateTime?
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
 }

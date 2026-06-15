@@ -6,6 +6,7 @@ import {
   PaymentKind,
   PaymentStatus,
   DunningOutcome,
+  RegistrationStatus,
 } from "@prisma/client";
 
 /** Map a Stripe subscription status onto our MembershipStatus enum. */
@@ -107,6 +108,27 @@ async function markOrderPaid(opts: {
   });
 }
 
+async function confirmRegistration(registrationId: string, paymentIntentId: string | null) {
+  const reg = await db.registration.findUnique({ where: { id: registrationId } });
+  if (!reg || reg.status === RegistrationStatus.confirmed || reg.status === RegistrationStatus.refunded) {
+    return;
+  }
+  await db.registration.update({
+    where: { id: registrationId },
+    data: { status: RegistrationStatus.confirmed, stripePaymentIntentId: paymentIntentId },
+  });
+  await db.payment.create({
+    data: {
+      userId: reg.userId,
+      kind: PaymentKind.one_time,
+      amount: reg.amount ?? 0,
+      currency: "eur",
+      stripePaymentIntentId: paymentIntentId,
+      status: PaymentStatus.succeeded,
+    },
+  });
+}
+
 /**
  * Apply a verified Stripe event to the database. Idempotency is enforced by the
  * caller (WebhookEvent table). Best-effort: unknown/irrelevant events are ignored.
@@ -123,10 +145,11 @@ export async function syncStripeEvent(event: Stripe.Event): Promise<void> {
     case "checkout.session.completed": {
       const s = event.data.object as Stripe.Checkout.Session;
       if (s.mode === "payment") {
-        await markOrderPaid({
-          checkoutSessionId: s.id,
-          paymentIntentId: idOf(s.payment_intent),
-        });
+        if (s.metadata?.registrationId) {
+          await confirmRegistration(s.metadata.registrationId, idOf(s.payment_intent));
+        } else {
+          await markOrderPaid({ checkoutSessionId: s.id, paymentIntentId: idOf(s.payment_intent) });
+        }
       }
       // subscription mode is handled by the customer.subscription.* events.
       break;

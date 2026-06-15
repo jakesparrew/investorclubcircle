@@ -1,0 +1,153 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { getAccessContext } from "@/lib/access-context";
+import { canAccess } from "@/lib/access";
+import { spaceRequirement } from "@/lib/spaces";
+import { stripe, onAccount, APP_FEE_PERCENT } from "@/lib/stripe";
+import { optionalEnv } from "@/lib/env";
+
+function appUrl() {
+  return optionalEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+}
+
+/** Register the current user for an event: member deposit (€1), paid ticket, free, or waitlist. */
+export async function registerForEvent(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!eventId) return;
+
+  const event = await db.event.findUnique({ where: { id: eventId }, include: { org: true } });
+  if (!event || event.status !== "published") throw new Error("Event niet beschikbaar");
+
+  const ctx = await getAccessContext(session.user.id, session.user.role);
+  if (!canAccess(ctx, spaceRequirement(event)).ok) throw new Error("Geen toegang tot dit event");
+
+  const existing = await db.registration.findUnique({
+    where: { eventId_userId: { eventId, userId: session.user.id } },
+  });
+  if (existing) redirect(`/events/${event.slug}`);
+
+  // Capacity reached → waitlist.
+  const activeCount = await db.registration.count({
+    where: { eventId, status: { in: ["confirmed", "pending"] } },
+  });
+  if (event.capacity && activeCount >= event.capacity) {
+    const waitCount = await db.registration.count({ where: { eventId, status: "waitlisted" } });
+    await db.registration.create({
+      data: {
+        eventId,
+        userId: session.user.id,
+        type: "free",
+        status: "waitlisted",
+        waitlistPosition: waitCount + 1,
+        checkinToken: randomUUID(),
+      },
+    });
+    redirect(`/events/${event.slug}?registered=waitlist`);
+  }
+
+  const member = await db.membership.findFirst({
+    where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
+  });
+
+  let type: "deposit" | "paid" | "free" = "free";
+  let amount = 0;
+  if (member && event.depositAmount && event.depositAmount > 0) {
+    type = "deposit";
+    amount = event.depositAmount;
+  } else if (!member && event.nonMemberPrice && event.nonMemberPrice > 0) {
+    type = "paid";
+    amount = event.nonMemberPrice;
+  }
+
+  const registration = await db.registration.create({
+    data: {
+      eventId,
+      userId: session.user.id,
+      type,
+      status: amount > 0 ? "pending" : "confirmed",
+      amount,
+      checkinToken: randomUUID(),
+    },
+  });
+
+  if (amount > 0) {
+    if (!event.org.stripeConnectedAccountId) throw new Error("Stripe niet gekoppeld");
+    const fee = Math.round(amount * (APP_FEE_PERCENT / 100));
+    const checkout = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: event.org.defaultCurrency,
+              product_data: { name: `${type === "deposit" ? "Waarborg" : "Ticket"}: ${event.title}` },
+              unit_amount: amount,
+            },
+            quantity: 1,
+          },
+        ],
+        payment_intent_data: {
+          application_fee_amount: fee,
+          metadata: { registrationId: registration.id, eventId, userId: session.user.id },
+        },
+        customer_email: session.user.email ?? undefined,
+        success_url: `${appUrl()}/events/${event.slug}?registered=success`,
+        cancel_url: `${appUrl()}/events/${event.slug}?registered=cancelled`,
+        metadata: { registrationId: registration.id, eventId, userId: session.user.id },
+      },
+      onAccount(event.org.stripeConnectedAccountId),
+    );
+    await db.registration.update({
+      where: { id: registration.id },
+      data: { stripeCheckoutSessionId: checkout.id },
+    });
+    if (checkout.url) redirect(checkout.url);
+  }
+
+  revalidatePath(`/events/${event.slug}`);
+}
+
+/** Host/admin checks a registrant in; refunds the deposit on attendance. */
+export async function checkInRegistration(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const registrationId = String(formData.get("registrationId") ?? "");
+  if (!registrationId) return;
+
+  const reg = await db.registration.findUnique({
+    where: { id: registrationId },
+    include: { event: { include: { org: true } } },
+  });
+  if (!reg) return;
+  if (session.user.role !== "ADMIN" && reg.event.hostId !== session.user.id) {
+    throw new Error("Forbidden");
+  }
+  if (reg.checkedInAt) return;
+
+  await db.registration.update({ where: { id: registrationId }, data: { checkedInAt: new Date() } });
+
+  // Refund the no-show deposit now that the member showed up.
+  if (reg.type === "deposit" && reg.stripePaymentIntentId && reg.event.org.stripeConnectedAccountId) {
+    try {
+      await stripe.refunds.create(
+        { payment_intent: reg.stripePaymentIntentId },
+        onAccount(reg.event.org.stripeConnectedAccountId),
+      );
+      await db.registration.update({
+        where: { id: registrationId },
+        data: { refundedAt: new Date(), status: "refunded" },
+      });
+    } catch (err) {
+      console.error("[events] deposit refund failed:", err);
+    }
+  }
+
+  revalidatePath(`/events/${reg.event.slug}/checkin`);
+}

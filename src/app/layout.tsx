@@ -21,6 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/community" className="text-neutral-600 hover:text-neutral-900">
                 Community
               </Link>
+              <Link href="/events" className="text-neutral-600 hover:text-neutral-900">
+                Events
+              </Link>
               <Link href="/leaderboard" className="text-neutral-600 hover:text-neutral-900">
                 Leaderboard
               </Link>
