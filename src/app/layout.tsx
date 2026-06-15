@@ -30,6 +30,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/leaderboard" className="text-neutral-600 hover:text-neutral-900">
                 Leaderboard
               </Link>
+              <Link href="/messages" className="text-neutral-600 hover:text-neutral-900">
+                Berichten
+              </Link>
               <Link href="/pricing" className="text-neutral-600 hover:text-neutral-900">
                 Lidmaatschap
               </Link>
