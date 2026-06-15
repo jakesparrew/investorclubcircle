@@ -1,0 +1,515 @@
+// InvestorClub Platform — Prisma schema
+// Phase 1 (Fundament). See docs/superpowers/specs/2026-06-15-platform-design.md §5.1.
+// Money is stored as integers in minor units (cents). Currency defaults to "eur".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7: connection URLs live in prisma.config.ts (CLI) and are passed to
+  // PrismaClient via `datasourceUrl` at runtime (see src/lib/db.ts).
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  MEMBER
+  EXPERT
+  ADMIN
+}
+
+enum MembershipStatus {
+  active
+  trialing
+  past_due
+  canceled
+  incomplete
+}
+
+enum BillingInterval {
+  month
+  year
+}
+
+enum OrderStatus {
+  pending
+  paid
+  refunded
+}
+
+enum OfferKind {
+  order_bump
+  upsell
+  downsell
+}
+
+enum OfferTrigger {
+  tier
+  product
+  checkout
+}
+
+enum GiftStatus {
+  purchased
+  redeemed
+  expired
+}
+
+enum PromotionKind {
+  PERCENT
+  AMOUNT
+  TRIAL
+  INTRO
+}
+
+enum DurationType {
+  ONCE
+  REPEATING
+  FOREVER
+}
+
+enum AffiliateStatus {
+  active
+  paused
+}
+
+enum ReferralType {
+  signup
+  subscription
+  order
+  course
+}
+
+enum RewardKind {
+  free_month
+  credit
+  cash
+}
+
+enum RewardStatus {
+  pending
+  approved
+  paid
+}
+
+enum PaymentKind {
+  subscription
+  one_time
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+enum DunningOutcome {
+  pending
+  recovered
+  failed
+}
+
+// ─── Organization (light multi-tenant hook; one row for now) ────────────────
+
+model Organization {
+  id                       String   @id @default(cuid())
+  name                     String
+  stripeConnectedAccountId String?
+  stripeAccountStatus      String?
+  defaultCurrency          String   @default("eur")
+  createdAt                DateTime @default(now())
+
+  tiers       Tier[]
+  memberships Membership[]
+  products    Product[]
+  bundles     Bundle[]
+  offers      Offer[]
+  promotions  Promotion[]
+  memberTags  MemberTag[]
+}
+
+// ─── Auth.js models (required by @auth/prisma-adapter) ──────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(MEMBER)
+  suspendedUntil DateTime?
+  createdAt     DateTime  @default(now())
+
+  accounts            Account[]
+  sessions            Session[]
+  memberships         Membership[]
+  orders              Order[]
+  payments            Payment[]
+  giftsPurchased      Gift[]               @relation("GiftPurchaser")
+  giftsRedeemed       Gift[]               @relation("GiftRedeemed")
+  affiliate           Affiliate?
+  referralsAsReferred ReferralConversion[] @relation("ReferredUser")
+  tags                UserTag[]
+  auditLogs           AuditLog[]           @relation("AuditActor")
+  onboarding          UserOnboardingProgress[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Membership, tiers & access ─────────────────────────────────────────────
+
+model Tier {
+  id                  String   @id @default(cuid())
+  orgId               String
+  key                 String // free | basis | premium
+  name                String
+  description         String?
+  priceMonthly        Int? // cents
+  priceYearly         Int? // cents
+  currency            String   @default("eur")
+  stripeProductId     String?
+  stripePriceMonthlyId String?
+  stripePriceYearlyId String?
+  perks               Json?
+  sortOrder           Int      @default(0)
+  active              Boolean  @default(true)
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  gifts       Gift[]
+
+  @@unique([orgId, key])
+  @@index([orgId])
+}
+
+model Membership {
+  id                   String           @id @default(cuid())
+  userId               String
+  orgId                String
+  tierId               String
+  status               MembershipStatus @default(incomplete)
+  interval             BillingInterval?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
+  grandfathered        Boolean          @default(false)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?          @unique
+  startedAt            DateTime         @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org             Organization     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tier            Tier             @relation(fields: [tierId], references: [id])
+  dunningAttempts DunningAttempt[]
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+  @@index([stripeCustomerId])
+}
+
+// ─── One-time sales: products, prices, bundles, offers, orders, gifts ───────
+
+model Product {
+  id              String   @id @default(cuid())
+  orgId           String
+  name            String
+  description     String?
+  active          Boolean  @default(true)
+  stripeProductId String?
+  images          String[]
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  prices Price[]
+  orders Order[]
+
+  @@index([orgId])
+}
+
+model Price {
+  id            String  @id @default(cuid())
+  productId     String
+  amount        Int // cents
+  currency      String  @default("eur")
+  stripePriceId String?
+  active        Boolean @default(true)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orders  Order[]
+  offers  Offer[] @relation("OfferPrice")
+
+  @@index([productId])
+}
+
+model Bundle {
+  id            String  @id @default(cuid())
+  orgId         String
+  name          String
+  description   String?
+  items         Json // { productIds: string[], tierIds: string[] }
+  price         Int // cents
+  currency      String  @default("eur")
+  stripePriceId String?
+  active        Boolean @default(true)
+
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([orgId])
+}
+
+model Offer {
+  id             String       @id @default(cuid())
+  orgId          String
+  kind           OfferKind
+  triggerType    OfferTrigger
+  triggerRef     String? // tierId / productId / "checkout"
+  offeredPriceId String
+  discountPercent Int?
+  active         Boolean      @default(true)
+
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  offeredPrice Price        @relation("OfferPrice", fields: [offeredPriceId], references: [id])
+
+  @@index([orgId])
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  userId                String
+  productId             String?
+  bundleId              String?
+  priceId               String?
+  amount                Int // cents
+  currency              String      @default("eur")
+  applicationFeeAmount  Int? // cents (platform commission)
+  status                OrderStatus @default(pending)
+  stripeCheckoutSessionId String?   @unique
+  stripePaymentIntentId String?
+  createdAt             DateTime    @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  bundle  Bundle?  @relation(fields: [bundleId], references: [id])
+  price   Price?   @relation(fields: [priceId], references: [id])
+
+  @@index([userId])
+}
+
+model Gift {
+  id                    String     @id @default(cuid())
+  purchaserId           String
+  tierId                String
+  interval              BillingInterval
+  redemptionCode        String     @unique
+  redeemedByUserId      String?
+  redeemedAt            DateTime?
+  status                GiftStatus @default(purchased)
+  stripePaymentIntentId String?
+  createdAt             DateTime   @default(now())
+
+  purchaser  User  @relation("GiftPurchaser", fields: [purchaserId], references: [id])
+  redeemedBy User? @relation("GiftRedeemed", fields: [redeemedByUserId], references: [id])
+  tier       Tier  @relation(fields: [tierId], references: [id])
+
+  @@index([purchaserId])
+}
+
+// ─── Promotions, affiliates, payments, dunning ──────────────────────────────
+
+model Promotion {
+  id                  String       @id @default(cuid())
+  orgId               String
+  code                String
+  kind                PromotionKind
+  value               Int? // percent (0-100) or amount in cents, depending on kind
+  currency            String?
+  durationType        DurationType @default(ONCE)
+  durationMonths      Int?
+  appliesToTiers      String[]
+  maxRedemptions      Int?
+  timesRedeemed       Int          @default(0)
+  expiresAt           DateTime?
+  stripeCouponId      String?
+  stripePromotionCodeId String?
+  active              Boolean      @default(true)
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, code])
+  @@index([orgId])
+}
+
+model Affiliate {
+  id               String          @id @default(cuid())
+  userId           String          @unique
+  code             String          @unique
+  commissionPercent Int            @default(0)
+  status           AffiliateStatus @default(active)
+  createdAt        DateTime        @default(now())
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversions ReferralConversion[]
+}
+
+model ReferralConversion {
+  id              String       @id @default(cuid())
+  affiliateId     String
+  referredUserId  String
+  type            ReferralType
+  rewardKind      RewardKind   @default(free_month)
+  rewardAmount    Int?
+  rewardStatus    RewardStatus @default(pending)
+  stripeTransferId String?
+  createdAt       DateTime     @default(now())
+
+  affiliate    Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredUser User      @relation("ReferredUser", fields: [referredUserId], references: [id])
+
+  @@index([affiliateId])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  userId                String
+  kind                  PaymentKind
+  amount                Int // cents
+  currency              String        @default("eur")
+  applicationFeeAmount  Int? // cents
+  stripeInvoiceId       String?
+  stripePaymentIntentId String?
+  status                PaymentStatus @default(pending)
+  createdAt             DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model DunningAttempt {
+  id            String         @id @default(cuid())
+  membershipId  String
+  attemptNumber Int
+  channel       String         @default("email")
+  sentAt        DateTime       @default(now())
+  outcome       DunningOutcome @default(pending)
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([membershipId])
+}
+
+// ─── Member tags / segmentation ─────────────────────────────────────────────
+
+model MemberTag {
+  id    String  @id @default(cuid())
+  orgId String
+  name  String
+  color String?
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  users UserTag[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+}
+
+model UserTag {
+  userId     String
+  tagId      String
+  assignedAt DateTime @default(now())
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  MemberTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([userId, tagId])
+  @@index([tagId])
+}
+
+// ─── Onboarding (welcome checklist) ─────────────────────────────────────────
+
+model OnboardingStep {
+  id        String  @id @default(cuid())
+  orgId     String
+  key       String
+  title     String
+  sortOrder Int     @default(0)
+  required  Boolean @default(false)
+
+  @@unique([orgId, key])
+}
+
+model UserOnboardingProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  stepKey     String
+  completedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stepKey])
+  @@index([userId])
+}
+
+// ─── Infrastructure: webhook idempotency + audit log ────────────────────────
+
+model WebhookEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  type          String
+  processedAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+}

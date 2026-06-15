@@ -1,0 +1,39 @@
+import { magicLinkSignIn, googleSignIn } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata = { title: "Inloggen — InvestorClub" };
+
+export default function LoginPage() {
+  return (
+    <div className="mx-auto max-w-md px-4 py-16">
+      <Card>
+        <CardHeader>
+          <CardTitle>Inloggen bij InvestorClub</CardTitle>
+          <CardDescription>Toegang tot de community, events en cursussen.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form action={googleSignIn}>
+            <Button type="submit" variant="outline" className="w-full">
+              Verder met Google
+            </Button>
+          </form>
+
+          <div className="flex items-center gap-3 text-xs text-neutral-400">
+            <span className="h-px flex-1 bg-neutral-200" />
+            of via magische link
+            <span className="h-px flex-1 bg-neutral-200" />
+          </div>
+
+          <form action={magicLinkSignIn} className="flex flex-col gap-3">
+            <Input type="email" name="email" placeholder="jij@email.be" required autoComplete="email" />
+            <Button type="submit" className="w-full">
+              Stuur magische link
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
