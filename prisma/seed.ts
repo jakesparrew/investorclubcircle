@@ -149,8 +149,64 @@ async function main() {
     },
   });
 
+  // ─── Academy (Fase 6) ─────────────────────────────────────────────────────
+  const course = await db.course.upsert({
+    where: { slug: "crypto-basis" },
+    update: { status: "published" },
+    create: {
+      id: "course_crypto_basis",
+      orgId: org.id,
+      title: "Crypto Basis",
+      slug: "crypto-basis",
+      description: "Leer de fundamenten van crypto-investeren in een paar korte lessen.",
+      isPublic: false,
+      minTier: "free",
+      status: "published",
+      sortOrder: 0,
+    },
+  });
+  const mod = await db.courseModule.upsert({
+    where: { id: "mod_intro" },
+    update: { title: "Introductie" },
+    create: { id: "mod_intro", courseId: course.id, title: "Introductie", sortOrder: 0 },
+  });
+  const lessons = [
+    { id: "les_what", title: "Wat is crypto?", content: "Crypto is digitaal geld op een gedecentraliseerd netwerk (blockchain). In deze les leer je de kernbegrippen.", isPreview: true, sortOrder: 0 },
+    { id: "les_wallets", title: "Wallets & veiligheid", content: "Een wallet bewaart je sleutels, niet je munten. We bespreken hot vs cold wallets en veilige bewaring.", isPreview: false, sortOrder: 1 },
+    { id: "les_strategy", title: "Een eenvoudige strategie", content: "Dollar-cost averaging (DCA): periodiek een vast bedrag investeren om timing-risico te spreiden.", isPreview: false, sortOrder: 2 },
+  ];
+  for (const l of lessons) {
+    await db.lesson.upsert({
+      where: { id: l.id },
+      update: { title: l.title, content: l.content, isPreview: l.isPreview, sortOrder: l.sortOrder, courseModuleId: mod.id },
+      create: { id: l.id, courseModuleId: mod.id, title: l.title, content: l.content, isPreview: l.isPreview, sortOrder: l.sortOrder },
+    });
+  }
+  const quiz = await db.quiz.upsert({
+    where: { lessonId: "les_wallets" },
+    update: { title: "Kennischeck: wallets", passPercent: 50 },
+    create: { id: "quiz_wallets", lessonId: "les_wallets", title: "Kennischeck: wallets", passPercent: 50 },
+  });
+  const q1 = await db.question.upsert({
+    where: { id: "q_wallet_1" },
+    update: { prompt: "Wat bewaart een crypto-wallet?" },
+    create: { id: "q_wallet_1", quizId: quiz.id, type: "single", prompt: "Wat bewaart een crypto-wallet?", sortOrder: 0 },
+  });
+  const answers = [
+    { id: "a_keys", text: "Je private keys", isCorrect: true, sortOrder: 0 },
+    { id: "a_coins", text: "De munten zelf", isCorrect: false, sortOrder: 1 },
+    { id: "a_pw", text: "Je e-mailwachtwoord", isCorrect: false, sortOrder: 2 },
+  ];
+  for (const a of answers) {
+    await db.answer.upsert({
+      where: { id: a.id },
+      update: { text: a.text, isCorrect: a.isCorrect, sortOrder: a.sortOrder },
+      create: { id: a.id, questionId: q1.id, text: a.text, isCorrect: a.isCorrect, sortOrder: a.sortOrder },
+    });
+  }
+
   console.log(
-    `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, levels=${levels.length}, admin=${adminEmail}`,
+    `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, levels=${levels.length}, course=${course.slug}, admin=${adminEmail}`,
   );
 }
 

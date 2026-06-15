@@ -133,6 +133,7 @@ model Organization {
   levels      Level[]
   events      Event[]
   eventSeries EventSeries[]
+  courses     Course[]
 }
 
 // ─── Auth.js models (required by @auth/prisma-adapter) ──────────────────────
@@ -175,6 +176,12 @@ model User {
   // Events (Fase 4)
   eventsHosted  Event[]        @relation("EventHost")
   registrations Registration[]
+
+  // Academy (Fase 6)
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  quizAttempts   QuizAttempt[]
+  certificates   Certificate[]
 }
 
 model Account {
@@ -848,4 +855,162 @@ model EventReminder {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
+}
+
+// ─── Academy / cursussen (Fase 6) ───────────────────────────────────────────
+
+enum CourseStatus {
+  draft
+  published
+}
+
+enum QuestionType {
+  single
+  multiple
+  truefalse
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  orgId       String
+  title       String
+  slug        String       @unique
+  description String?
+  coverImage  String?
+  isPublic    Boolean      @default(false)
+  minTier     String?
+  status      CourseStatus @default(draft)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  org          Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  modules      CourseModule[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+
+  @@index([orgId])
+}
+
+model CourseModule {
+  id        String @id @default(cuid())
+  courseId  String
+  title     String
+  sortOrder Int    @default(0)
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId])
+}
+
+model Lesson {
+  id                   String  @id @default(cuid())
+  courseModuleId       String
+  title                String
+  content              String
+  videoUrl             String?
+  durationSec          Int?
+  isPreview            Boolean @default(false)
+  sortOrder            Int     @default(0)
+  dripOffsetDays       Int?
+  prerequisiteLessonId String?
+
+  module   CourseModule     @relation(fields: [courseModuleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+  quiz     Quiz?
+
+  @@index([courseModuleId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId   String
+  enrolledAt DateTime @default(now())
+  source     String?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+}
+
+model Quiz {
+  id          String @id @default(cuid())
+  lessonId    String @unique
+  title       String
+  passPercent Int    @default(70)
+
+  lesson    Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id        String       @id @default(cuid())
+  quizId    String
+  type      QuestionType @default(single)
+  prompt    String
+  sortOrder Int          @default(0)
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([quizId])
+}
+
+model Answer {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Int
+  passed      Boolean
+  submittedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+model Certificate {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  serial    String   @unique
+  issuedAt  DateTime @default(now())
+  pdfUrl    String?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
 }
