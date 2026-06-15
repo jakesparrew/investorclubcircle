@@ -20,6 +20,22 @@ export async function awardPoints(
   await db.pointsLedger.create({ data: { userId, points, reason, sourceType, sourceId } });
 }
 
+/**
+ * Award points only once per (user, reason, source). Use for repeatable/toggleable
+ * actions (reactions, poll votes, lesson completion) to prevent point farming.
+ */
+export async function awardPointsOnce(
+  userId: string,
+  points: number,
+  reason: string,
+  sourceType: string,
+  sourceId: string,
+): Promise<void> {
+  const existing = await db.pointsLedger.findFirst({ where: { userId, reason, sourceType, sourceId } });
+  if (existing) return;
+  await db.pointsLedger.create({ data: { userId, points, reason, sourceType, sourceId } });
+}
+
 export async function getUserTotalPoints(userId: string): Promise<number> {
   const agg = await db.pointsLedger.aggregate({ where: { userId }, _sum: { points: true } });
   return agg._sum.points ?? 0;

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
@@ -33,25 +34,6 @@ export async function registerForEvent(formData: FormData) {
   });
   if (existing) redirect(`/events/${event.slug}`);
 
-  // Capacity reached → waitlist.
-  const activeCount = await db.registration.count({
-    where: { eventId, status: { in: ["confirmed", "pending"] } },
-  });
-  if (event.capacity && activeCount >= event.capacity) {
-    const waitCount = await db.registration.count({ where: { eventId, status: "waitlisted" } });
-    await db.registration.create({
-      data: {
-        eventId,
-        userId: session.user.id,
-        type: "free",
-        status: "waitlisted",
-        waitlistPosition: waitCount + 1,
-        checkinToken: randomUUID(),
-      },
-    });
-    redirect(`/events/${event.slug}?registered=waitlist`);
-  }
-
   const member = await db.membership.findFirst({
     where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
   });
@@ -66,16 +48,45 @@ export async function registerForEvent(formData: FormData) {
     amount = event.nonMemberPrice;
   }
 
-  const registration = await db.registration.create({
-    data: {
-      eventId,
-      userId: session.user.id,
-      type,
-      status: amount > 0 ? "pending" : "confirmed",
-      amount,
-      checkinToken: randomUUID(),
+  // Decide capacity vs waitlist and create the registration atomically (prevents overbooking).
+  const result = await db.$transaction(
+    async (tx) => {
+      const activeCount = await tx.registration.count({
+        where: { eventId, status: { in: ["confirmed", "pending"] } },
+      });
+      if (event.capacity && activeCount >= event.capacity) {
+        const waitCount = await tx.registration.count({ where: { eventId, status: "waitlisted" } });
+        await tx.registration.create({
+          data: {
+            eventId,
+            userId: session.user.id,
+            type: "free",
+            status: "waitlisted",
+            waitlistPosition: waitCount + 1,
+            checkinToken: randomUUID(),
+          },
+        });
+        return { waitlisted: true as const, registration: null };
+      }
+      const registration = await tx.registration.create({
+        data: {
+          eventId,
+          userId: session.user.id,
+          type,
+          status: amount > 0 ? "pending" : "confirmed",
+          amount,
+          checkinToken: randomUUID(),
+        },
+      });
+      return { waitlisted: false as const, registration };
     },
-  });
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
+
+  if (result.waitlisted || !result.registration) {
+    redirect(`/events/${event.slug}?registered=waitlist`);
+  }
+  const registration = result.registration;
 
   if (amount > 0) {
     if (!event.org.stripeConnectedAccountId) throw new Error("Stripe niet gekoppeld");
@@ -130,14 +141,17 @@ export async function checkInRegistration(formData: FormData) {
     throw new Error("Forbidden");
   }
   if (reg.checkedInAt) return;
+  if (reg.status !== "confirmed") {
+    throw new Error("Inschrijving is niet bevestigd");
+  }
 
   await db.registration.update({ where: { id: registrationId }, data: { checkedInAt: new Date() } });
 
-  // Refund the no-show deposit now that the member showed up.
+  // Refund the no-show deposit now that the member showed up (incl. the platform fee).
   if (reg.type === "deposit" && reg.stripePaymentIntentId && reg.event.org.stripeConnectedAccountId) {
     try {
       await stripe.refunds.create(
-        { payment_intent: reg.stripePaymentIntentId },
+        { payment_intent: reg.stripePaymentIntentId, refund_application_fee: true },
         onAccount(reg.event.org.stripeConnectedAccountId),
       );
       await db.registration.update({

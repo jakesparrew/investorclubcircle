@@ -79,6 +79,16 @@ Status van de autonome bouw + wat er nog nodig is. Bijgewerkt 2026-06-15.
   `stripeCustomerId` per gebruiker bewaren en `customer` hergebruiken (voor billing-portal/proratie).
 - **Transitieve vulns** (moderate) in dev/build-tooling (`@hono/node-server` via Prisma Studio, `postcss` via Next) — opvolgen met patch-releases, niet force-fixen.
 
+**Module-review (Fase 2/3/4/6) — opgelost:** bookmark-IDOR dichtgezet (toegangscheck), punten-farming
+gestopt (`awardPointsOnce` voor reacties/polls/lessen), academy drip/prerequisites + inschrijving
+nu server-side afgedwongen in de acties (niet enkel UI), quiz-grading fail-closed bij vragen zonder
+juist antwoord, event-capaciteit via serializable transactie (geen overboeking), check-in enkel voor
+bevestigde inschrijvingen + deposit-refund reverseert nu ook de platform-fee, chat toont de recentste 200.
+
+**Module-review — opvolging (later):** waitlist auto-promotie bij vrijgekomen plaats; opruimen van
+verlopen `pending`-inschrijvingen (`checkout.session.expired`); prerequisite-cyclus-guard bij cursus-authoring;
+unieke sleutel om dubbele 1-op-1-gesprekken bij race te vermijden; paginatie voor chat-threads >200 berichten.
+
 ## ▶️ Eerste keer draaien (zodra keys live zijn)
 
 ```

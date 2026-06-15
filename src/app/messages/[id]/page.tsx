@@ -35,7 +35,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         messages: {
           where: { deletedAt: null },
           include: { sender: { select: { id: true, name: true, email: true } } },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: "desc" },
           take: 200,
         },
       },
@@ -62,7 +62,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       <h1 className="mt-2 mb-4 text-xl font-bold">{title}</h1>
 
       <div className="flex flex-col gap-2">
-        {conversation.messages.map((msg) => {
+        {[...conversation.messages].reverse().map((msg) => {
           const mine = msg.sender.id === me;
           return (
             <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>

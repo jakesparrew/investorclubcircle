@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
-import { awardPoints, POINTS } from "@/lib/points";
+import { awardPoints, awardPointsOnce, POINTS } from "@/lib/points";
 
 async function requireSession(): Promise<Session> {
   const session = await auth();
@@ -101,9 +101,9 @@ export async function toggleReaction(formData: FormData) {
     await db.reaction.delete({ where: { id: existing.id } });
   } else {
     await db.reaction.create({ data: { targetType, targetId, userId: session.user.id, type: "like" } });
-    await awardPoints(session.user.id, POINTS.reaction_given, "reaction_given", targetType, targetId);
+    await awardPointsOnce(session.user.id, POINTS.reaction_given, "reaction_given", targetType, targetId);
     if (authorId && authorId !== session.user.id) {
-      await awardPoints(authorId, POINTS.reaction_received, "reaction_received", targetType, targetId);
+      await awardPointsOnce(authorId, POINTS.reaction_received, "reaction_received", targetType, targetId);
     }
   }
 
@@ -132,7 +132,7 @@ export async function votePoll(formData: FormData) {
     update: {},
     create: { pollOptionId, userId: session.user.id },
   });
-  await awardPoints(session.user.id, POINTS.poll_vote, "poll_vote", "poll", option.pollId);
+  await awardPointsOnce(session.user.id, POINTS.poll_vote, "poll_vote", "poll", option.pollId);
   revalidatePath(`/community/${option.poll.post.space.slug}/${option.poll.postId}`);
 }
 
@@ -142,6 +142,19 @@ export async function toggleBookmark(formData: FormData) {
   const targetId = String(formData.get("targetId") ?? "");
   const redirectPath = String(formData.get("redirectPath") ?? "");
   if (!targetType || !targetId) return;
+
+  // Verify the user can access the bookmarked resource (prevents IDOR / existence oracle).
+  if (targetType === "post") {
+    const post = await db.post.findUnique({ where: { id: targetId } });
+    if (!post) return;
+    await assertSpaceAccess(session, post.spaceId);
+  } else if (targetType === "comment") {
+    const comment = await db.comment.findUnique({ where: { id: targetId }, include: { post: true } });
+    if (!comment) return;
+    await assertSpaceAccess(session, comment.post.spaceId);
+  } else {
+    return;
+  }
 
   const existing = await db.bookmark.findUnique({
     where: { userId_targetType_targetId: { userId: session.user.id, targetType, targetId } },

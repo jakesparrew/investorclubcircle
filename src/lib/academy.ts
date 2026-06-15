@@ -8,8 +8,8 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
-import { courseRequirement } from "@/lib/academy-access";
-import { awardPoints } from "@/lib/points";
+import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
+import { awardPointsOnce } from "@/lib/points";
 
 async function assertCourseAccess(session: Session, course: { isPublic: boolean; minTier: string | null }) {
   const ctx = await getAccessContext(session.user.id, session.user.role);
@@ -68,12 +68,21 @@ export async function completeLesson(formData: FormData) {
   });
   if (!enrollment) throw new Error("Schrijf je eerst in voor deze cursus");
 
+  // Enforce drip / prerequisites server-side (not just in the page).
+  const doneLessons = await db.lessonProgress.findMany({
+    where: { userId: session.user.id },
+    select: { lessonId: true },
+  });
+  if (!isLessonAvailable(lesson, enrollment.enrolledAt, new Set(doneLessons.map((p) => p.lessonId)), new Date())) {
+    throw new Error("Deze les is nog niet beschikbaar");
+  }
+
   await db.lessonProgress.upsert({
     where: { userId_lessonId: { userId: session.user.id, lessonId } },
     update: {},
     create: { userId: session.user.id, lessonId },
   });
-  await awardPoints(session.user.id, 15, "lesson_complete", "lesson", lessonId);
+  await awardPointsOnce(session.user.id, 15, "lesson_complete", "lesson", lessonId);
   await maybeIssueCertificate(session.user.id, course.id);
 
   revalidatePath(`/academy/${course.slug}/${lessonId}`);
@@ -97,13 +106,28 @@ export async function submitQuiz(formData: FormData) {
   const course = quiz.lesson.module.course;
   await assertCourseAccess(session, course);
 
+  const enrollment = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
+  });
+  if (!enrollment) throw new Error("Schrijf je eerst in voor deze cursus");
+  const doneLessons = await db.lessonProgress.findMany({
+    where: { userId: session.user.id },
+    select: { lessonId: true },
+  });
+  if (
+    !isLessonAvailable(quiz.lesson, enrollment.enrolledAt, new Set(doneLessons.map((p) => p.lessonId)), new Date())
+  ) {
+    throw new Error("Deze les is nog niet beschikbaar");
+  }
+
   let correct = 0;
   for (const q of quiz.questions) {
-    const selected = formData.getAll(`q_${q.id}`).map(String).sort();
     const correctIds = q.answers
       .filter((a) => a.isCorrect)
       .map((a) => a.id)
       .sort();
+    if (correctIds.length === 0) continue; // ungradeable (no correct answer) — never counts as correct
+    const selected = formData.getAll(`q_${q.id}`).map(String).sort();
     const isCorrect =
       correctIds.length === selected.length && correctIds.every((id, i) => id === selected[i]);
     if (isCorrect) correct++;
