@@ -5,7 +5,14 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
-import { createComment, toggleReaction, toggleBookmark, votePoll } from "@/lib/community";
+import {
+  createComment,
+  toggleReaction,
+  toggleBookmark,
+  votePoll,
+  deletePost,
+  togglePinPost,
+} from "@/lib/community";
 import { generateSocialVariants, summarizePost } from "@/lib/ai";
 import { reportContent } from "@/lib/moderation";
 import { Button } from "@/components/ui/button";
@@ -201,6 +208,22 @@ export default async function PostPage({
               ⚑ Rapporteer
             </Button>
           </form>
+          {session.user.role === "ADMIN" && (
+            <form action={togglePinPost}>
+              <input type="hidden" name="postId" value={post.id} />
+              <Button type="submit" size="sm" variant="ghost">
+                {post.pinned ? "📌 Unpin" : "📌 Pin"}
+              </Button>
+            </form>
+          )}
+          {(post.authorId === session.user.id || session.user.role === "ADMIN") && (
+            <form action={deletePost}>
+              <input type="hidden" name="postId" value={post.id} />
+              <Button type="submit" size="sm" variant="ghost">
+                🗑 Verwijder
+              </Button>
+            </form>
+          )}
         </div>
       </article>
 

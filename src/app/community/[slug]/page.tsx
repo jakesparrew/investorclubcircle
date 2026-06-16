@@ -79,6 +79,16 @@ export default async function SpacePage({ params }: { params: Promise<{ slug: st
               placeholder="Deel iets met de community…"
               className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
             />
+            <details className="text-sm">
+              <summary className="cursor-pointer text-neutral-500">+ Poll toevoegen (optioneel)</summary>
+              <div className="mt-2 flex flex-col gap-2">
+                <Input name="pollQuestion" placeholder="Pollvraag" />
+                <Input name="pollOption1" placeholder="Optie 1" />
+                <Input name="pollOption2" placeholder="Optie 2" />
+                <Input name="pollOption3" placeholder="Optie 3 (optioneel)" />
+                <Input name="pollOption4" placeholder="Optie 4 (optioneel)" />
+              </div>
+            </details>
             <div className="flex justify-end">
               <Button type="submit">Plaatsen</Button>
             </div>

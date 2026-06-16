@@ -37,7 +37,50 @@ export async function createPost(formData: FormData) {
     data: { spaceId, authorId: session.user.id, title, content },
   });
   await awardPoints(session.user.id, POINTS.post, "post", "post", post.id);
+
+  // Optional poll attached to the post.
+  const pollQuestion = String(formData.get("pollQuestion") ?? "").trim();
+  if (pollQuestion) {
+    const options = [1, 2, 3, 4]
+      .map((i) => String(formData.get(`pollOption${i}`) ?? "").trim())
+      .filter(Boolean);
+    if (options.length >= 2) {
+      await db.poll.create({
+        data: {
+          postId: post.id,
+          question: pollQuestion,
+          options: { create: options.map((text, idx) => ({ text, sortOrder: idx })) },
+        },
+      });
+    }
+  }
   revalidatePath(`/community/${space.slug}`);
+}
+
+export async function deletePost(formData: FormData) {
+  const session = await requireSession();
+  const postId = String(formData.get("postId") ?? "");
+  if (!postId) return;
+  const post = await db.post.findUnique({ where: { id: postId }, include: { space: true } });
+  if (!post) return;
+  if (post.authorId !== session.user.id && session.user.role !== "ADMIN") {
+    throw new Error("Forbidden");
+  }
+  const slug = post.space.slug;
+  await db.post.delete({ where: { id: postId } });
+  redirect(`/community/${slug}`);
+}
+
+export async function togglePinPost(formData: FormData) {
+  const session = await requireSession();
+  if (session.user.role !== "ADMIN") throw new Error("Forbidden");
+  const postId = String(formData.get("postId") ?? "");
+  if (!postId) return;
+  const post = await db.post.findUnique({ where: { id: postId }, include: { space: true } });
+  if (!post) return;
+  await db.post.update({ where: { id: postId }, data: { pinned: !post.pinned } });
+  revalidatePath(`/community/${post.space.slug}`);
+  revalidatePath(`/community/${post.space.slug}/${postId}`);
 }
 
 export async function createComment(formData: FormData) {
