@@ -149,3 +149,21 @@ export async function submitQuiz(formData: FormData) {
 
   revalidatePath(`/academy/${course.slug}/${quiz.lessonId}`);
 }
+
+export async function addLessonComment(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const lessonId = String(formData.get("lessonId") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
+  if (!lessonId || !content) return;
+
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    include: { module: { include: { course: true } } },
+  });
+  if (!lesson) return;
+  await assertCourseAccess(session, lesson.module.course);
+
+  await db.lessonComment.create({ data: { lessonId, authorId: session.user.id, content } });
+  revalidatePath(`/academy/${lesson.module.course.slug}/${lessonId}`);
+}

@@ -185,6 +185,7 @@ model User {
   lessonProgress LessonProgress[]
   quizAttempts   QuizAttempt[]
   certificates   Certificate[]
+  lessonComments LessonComment[]
 
   // Chat (Fase 3)
   conversationMemberships ConversationMember[]
@@ -929,8 +930,22 @@ model Lesson {
   module   CourseModule     @relation(fields: [courseModuleId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
   quiz     Quiz?
+  comments LessonComment[]
 
   @@index([courseModuleId])
+}
+
+model LessonComment {
+  id        String   @id @default(cuid())
+  lessonId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
 }
 
 model Enrollment {

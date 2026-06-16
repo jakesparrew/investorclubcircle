@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
-import { completeLesson, submitQuiz } from "@/lib/academy";
+import { completeLesson, submitQuiz, addLessonComment } from "@/lib/academy";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,7 @@ type LessonDetail = Prisma.LessonGetPayload<{
   include: {
     module: { include: { course: true } };
     quiz: { include: { questions: { include: { answers: true } } } };
+    comments: { include: { author: { select: { name: true; email: true } } } };
   };
 }>;
 
@@ -36,6 +37,11 @@ export default async function LessonPage({
       include: {
         module: { include: { course: true } },
         quiz: { include: { questions: { include: { answers: true }, orderBy: { sortOrder: "asc" } } } },
+        comments: {
+          include: { author: { select: { name: true, email: true } } },
+          orderBy: { createdAt: "asc" },
+          take: 100,
+        },
       },
     });
   } catch {
@@ -137,6 +143,32 @@ export default async function LessonPage({
           </form>
         )
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-sm font-semibold text-neutral-500">
+          Discussie ({lesson.comments.length})
+        </h2>
+        <form action={addLessonComment} className="mb-4 flex gap-2">
+          <input type="hidden" name="lessonId" value={lesson.id} />
+          <input
+            name="content"
+            required
+            placeholder="Stel een vraag of deel iets…"
+            className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+          />
+          <Button type="submit" size="sm">
+            Plaats
+          </Button>
+        </form>
+        <div className="flex flex-col gap-3">
+          {lesson.comments.map((c) => (
+            <div key={c.id} className="rounded-lg border border-neutral-200 bg-white p-4">
+              <div className="text-xs text-neutral-400">{c.author.name ?? c.author.email}</div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{c.content}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
