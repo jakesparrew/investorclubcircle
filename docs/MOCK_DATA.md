@@ -22,6 +22,16 @@ Elke plek waar fictieve of placeholder-data in het systeem zit, zodat we het lat
 | 8 | `prisma/seed.ts` — levels/badges | Gamification-levels (Starter…Legende) + badges (founding, first_post) | Stem af op gewenste gamification |
 | 9 | Analytics MRR (`/admin/analytics`) | MRR-schatting gebruikt de **placeholder tier-prijzen** (#4) | Wordt vanzelf juist zodra prijzen + echte abonnementen live zijn |
 
+## 🟢 Demo-content (seed — `prisma/seed.ts`, blok "DEMO / MOCK content")
+
+- **5 demo-leden** (`demo_sven`…`demo_yusuf`, e-mails op `@demo.investorclub.be`) — kunnen niet inloggen; vullen directory & leaderboard.
+- **3 demo-posts** (Introducties + Crypto) + **1 poll** op "Staking-rendementen 2026".
+- **Demo-punten** voor de leaderboard (`PointsLedger.reason = "seed_demo"`).
+- **2 podcast-afleveringen** met **nep audio-URL** (`https://example.com/podcast/…` — speelt niet af).
+- **1 livestream-opname** met een **echte publieke YouTube-video als placeholder**.
+
+→ Verwijder dit hele blok uit `prisma/seed.ts` (en de `demo_*`-rijen uit de DB) vóór launch.
+
 ## 🔑 Dummy keys (in `.env.local`, gitignored — niet echt)
 
 | # | Variabele | Status |

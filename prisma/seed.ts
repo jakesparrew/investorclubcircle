@@ -205,8 +205,94 @@ async function main() {
     });
   }
 
+  // ─── DEMO / MOCK content (see docs/MOCK_DATA.md) ──────────────────────────
+  // Fictional members + posts so the platform looks populated. Emails end in
+  // @demo.investorclub.be and cannot log in. Remove or replace before launch.
+  const demoMembers = [
+    { id: "demo_sven", name: "Sven D.", email: "sven@demo.investorclub.be", headline: "Long-term holder" },
+    { id: "demo_lara", name: "Lara V.", email: "lara@demo.investorclub.be", headline: "DeFi & staking" },
+    { id: "demo_tom", name: "Tom B.", email: "tom@demo.investorclub.be", headline: "Macro & goud" },
+    { id: "demo_nora", name: "Nora K.", email: "nora@demo.investorclub.be", headline: "Beginner, leergierig" },
+    { id: "demo_yusuf", name: "Yusuf A.", email: "yusuf@demo.investorclub.be", headline: "On-chain analyse" },
+  ];
+  for (const m of demoMembers) {
+    await db.user.upsert({
+      where: { email: m.email },
+      update: { name: m.name },
+      create: { id: m.id, email: m.email, name: m.name, role: "MEMBER" },
+    });
+    await db.profile.upsert({
+      where: { userId: m.id },
+      update: { headline: m.headline },
+      create: { userId: m.id, headline: m.headline },
+    });
+  }
+
+  const demoPosts = [
+    { id: "demo_post_1", spaceId: "sp_introducties", authorId: "demo_sven", title: "Hallo allemaal!", content: "Sinds 2021 actief in crypto, blij hier te zijn." },
+    { id: "demo_post_2", spaceId: "sp_crypto", authorId: "demo_lara", title: "Staking-rendementen 2026", content: "Wat zijn jullie favoriete staking-opties dit jaar?" },
+    { id: "demo_post_3", spaceId: "sp_crypto", authorId: "demo_yusuf", title: "On-chain: exchange reserves dalen", content: "Reserves op exchanges blijven dalen — sommigen zien dat als bullish." },
+  ];
+  for (const p of demoPosts) {
+    await db.post.upsert({ where: { id: p.id }, update: {}, create: p });
+  }
+
+  if (!(await db.poll.findUnique({ where: { postId: "demo_post_2" } }))) {
+    await db.poll.create({
+      data: {
+        postId: "demo_post_2",
+        question: "Welke staking-optie verkies je?",
+        options: { create: [{ text: "ETH", sortOrder: 0 }, { text: "SOL", sortOrder: 1 }, { text: "ADA", sortOrder: 2 }] },
+      },
+    });
+  }
+
+  const demoPoints: [string, number][] = [
+    ["demo_yusuf", 510],
+    ["demo_lara", 340],
+    ["demo_sven", 120],
+    ["demo_tom", 80],
+    ["demo_nora", 30],
+  ];
+  for (const [uid, pts] of demoPoints) {
+    if (!(await db.pointsLedger.findFirst({ where: { userId: uid, reason: "seed_demo" } }))) {
+      await db.pointsLedger.create({
+        data: { userId: uid, points: pts, reason: "seed_demo", sourceType: "seed", sourceId: "demo" },
+      });
+    }
+  }
+
+  // MOCK podcast episodes (audioUrl is fake) + one livestream recording (real public video as placeholder).
+  const demoEpisodes = [
+    { id: "demo_ep_1", title: "Aflevering 1 — Marktupdate", description: "De crypto-week in 20 minuten.", audioUrl: "https://example.com/podcast/ep1.mp3" },
+    { id: "demo_ep_2", title: "Aflevering 2 — DeFi diepduik", description: "Alles over staking & yield.", audioUrl: "https://example.com/podcast/ep2.mp3" },
+  ];
+  for (const e of demoEpisodes) {
+    await db.podcastEpisode.upsert({
+      where: { id: e.id },
+      update: {},
+      create: { id: e.id, orgId: org.id, title: e.title, description: e.description, audioUrl: e.audioUrl },
+    });
+  }
+
+  await db.livestream.upsert({
+    where: { id: "demo_stream_1" },
+    update: {},
+    create: {
+      id: "demo_stream_1",
+      orgId: org.id,
+      hostId: admin.id,
+      title: "Live AMA met het team",
+      description: "Maandelijkse Q&A met de experts.",
+      embedUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+      recordingUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+      isPublic: true,
+      status: "ended",
+    },
+  });
+
   console.log(
-    `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, levels=${levels.length}, course=${course.slug}, admin=${adminEmail}`,
+    `Seed complete: org=${org.name}, tiers=${tiers.length}, spaces=${spaces.length}, demoMembers=${demoMembers.length}, demoPosts=${demoPosts.length}, admin=${adminEmail}`,
   );
 }
 
