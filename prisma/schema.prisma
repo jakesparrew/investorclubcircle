@@ -194,6 +194,9 @@ model User {
   // Content (Fase 5)
   newsletterOptIn Boolean      @default(false)
   streamsHosted   Livestream[] @relation("StreamHost")
+
+  // Verdieping (Fase 8)
+  portfolioLink PortfolioLink?
 }
 
 model Account {
@@ -1204,4 +1207,18 @@ model PodcastEpisode {
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
+}
+
+// Verdieping (Fase 8) — portfolio link. Holdings are MOCK until the
+// investeren.org API is wired (see docs/MOCK_DATA.md).
+model PortfolioLink {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  provider          String    @default("investeren.org")
+  externalAccountId String?
+  lastSyncedAt      DateTime?
+  status            String    @default("linked")
+  createdAt         DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

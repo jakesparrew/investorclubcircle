@@ -147,6 +147,9 @@ export default async function DashboardPage() {
         <Link href="/referral" className="text-neutral-700 underline">
           Uitnodigen
         </Link>
+        <Link href="/portfolio" className="text-neutral-700 underline">
+          Portfolio
+        </Link>
       </div>
 
       <div className="mt-6">
