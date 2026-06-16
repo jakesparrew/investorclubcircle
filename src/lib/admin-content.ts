@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { QuestionType } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
@@ -168,4 +169,44 @@ export async function addPodcastEpisode(formData: FormData) {
   });
   revalidatePath("/admin/podcast");
   revalidatePath("/podcast");
+}
+
+// ─── Quiz builder ─────────────────────────────────────────────────────────────
+
+export async function createQuiz(formData: FormData) {
+  await requireAdmin();
+  const lessonId = str(formData, "lessonId");
+  if (!lessonId) return;
+  await db.quiz.upsert({
+    where: { lessonId },
+    update: { title: str(formData, "title") || "Quiz", passPercent: intOrNull(formData, "passPercent") ?? 70 },
+    create: { lessonId, title: str(formData, "title") || "Quiz", passPercent: intOrNull(formData, "passPercent") ?? 70 },
+  });
+  revalidatePath(`/admin/lessons/${lessonId}/quiz`);
+}
+
+export async function addQuestion(formData: FormData) {
+  await requireAdmin();
+  const quizId = str(formData, "quizId");
+  const prompt = str(formData, "prompt");
+  const lessonId = str(formData, "lessonId");
+  if (!quizId || !prompt) return;
+  const typeRaw = str(formData, "type") || "single";
+  const type = (["single", "multiple", "truefalse"].includes(typeRaw) ? typeRaw : "single") as QuestionType;
+  const count = await db.question.count({ where: { quizId } });
+  await db.question.create({ data: { quizId, prompt, type, sortOrder: count } });
+  if (lessonId) revalidatePath(`/admin/lessons/${lessonId}/quiz`);
+}
+
+export async function addAnswer(formData: FormData) {
+  await requireAdmin();
+  const questionId = str(formData, "questionId");
+  const text = str(formData, "text");
+  const lessonId = str(formData, "lessonId");
+  if (!questionId || !text) return;
+  const count = await db.answer.count({ where: { questionId } });
+  await db.answer.create({
+    data: { questionId, text, isCorrect: formData.get("isCorrect") === "on", sortOrder: count },
+  });
+  if (lessonId) revalidatePath(`/admin/lessons/${lessonId}/quiz`);
 }

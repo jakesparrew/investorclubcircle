@@ -127,6 +127,15 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
+      <div className="mt-6 flex gap-4 text-sm">
+        <Link href="/bookmarks" className="text-neutral-700 underline">
+          ★ Bewaarde posts
+        </Link>
+        <Link href={`/members/${session.user.id}`} className="text-neutral-700 underline">
+          Mijn profiel
+        </Link>
+      </div>
+
       <div className="mt-6">
         <Card>
           <CardContent className="flex items-center justify-between pt-6">

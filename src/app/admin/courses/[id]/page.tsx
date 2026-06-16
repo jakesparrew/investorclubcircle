@@ -62,6 +62,9 @@ export default async function AdminCourseEditPage({ params }: { params: Promise<
                   • {l.title}
                   {l.isPreview && <Badge variant="secondary">preview</Badge>}
                   {l.dripOffsetDays ? <Badge variant="secondary">drip {l.dripOffsetDays}d</Badge> : null}
+                  <Link href={`/admin/lessons/${l.id}/quiz`} className="ml-auto text-xs underline">
+                    Quiz
+                  </Link>
                 </div>
               ))}
               {m.lessons.length === 0 && <p className="text-sm text-neutral-400">Nog geen lessen.</p>}
