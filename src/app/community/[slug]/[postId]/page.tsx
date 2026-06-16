@@ -91,6 +91,34 @@ export default async function PostPage({
 
   const path = `/community/${slug}/${postId}`;
 
+  const commentIds = post.comments.map((c) => c.id);
+  const reactionRows = commentIds.length
+    ? await db.reaction.groupBy({
+        by: ["targetId"],
+        where: { targetType: "comment", targetId: { in: commentIds } },
+        _count: { _all: true },
+      })
+    : [];
+  const commentReactions = new Map(reactionRows.map((r) => [r.targetId, r._count._all]));
+  const myReacted = commentIds.length
+    ? new Set(
+        (
+          await db.reaction.findMany({
+            where: { targetType: "comment", targetId: { in: commentIds }, userId: session.user.id },
+            select: { targetId: true },
+          })
+        ).map((r) => r.targetId),
+      )
+    : new Set<string>();
+  const topComments = post.comments.filter((c) => !c.parentId);
+  const repliesByParent = new Map<string, typeof post.comments>();
+  for (const c of post.comments) {
+    if (!c.parentId) continue;
+    const arr = repliesByParent.get(c.parentId);
+    if (arr) arr.push(c);
+    else repliesByParent.set(c.parentId, [c]);
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <Link href={`/community/${slug}`} className="text-sm text-neutral-500 hover:text-neutral-900">
@@ -202,19 +230,66 @@ export default async function PostPage({
         </Card>
 
         <div className="flex flex-col gap-3">
-          {post.comments.map((comment) => (
-            <div key={comment.id} className="rounded-lg border border-neutral-200 bg-white p-4">
-              <div className="text-xs text-neutral-400">
-                {comment.author.name ?? comment.author.email}
+          {topComments.map((comment) => (
+            <div key={comment.id} className="flex flex-col gap-2">
+              <div className="rounded-lg border border-neutral-200 bg-white p-4">
+                <div className="text-xs text-neutral-400">
+                  {comment.author.name ?? comment.author.email}
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{comment.content}</p>
+                <div className="mt-2 flex items-center gap-4">
+                  <form action={toggleReaction}>
+                    <input type="hidden" name="targetType" value="comment" />
+                    <input type="hidden" name="targetId" value={comment.id} />
+                    <button
+                      type="submit"
+                      className={`text-xs hover:text-neutral-700 ${myReacted.has(comment.id) ? "font-medium text-neutral-900" : "text-neutral-400"}`}
+                    >
+                      ♥ {commentReactions.get(comment.id) ?? 0}
+                    </button>
+                  </form>
+                  <form action={reportContent}>
+                    <input type="hidden" name="targetType" value="comment" />
+                    <input type="hidden" name="targetId" value={comment.id} />
+                    <input type="hidden" name="redirectPath" value={path} />
+                    <button type="submit" className="text-xs text-neutral-400 hover:text-neutral-700">
+                      ⚑ rapporteer
+                    </button>
+                  </form>
+                </div>
               </div>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{comment.content}</p>
-              <form action={reportContent} className="mt-2">
-                <input type="hidden" name="targetType" value="comment" />
-                <input type="hidden" name="targetId" value={comment.id} />
-                <input type="hidden" name="redirectPath" value={path} />
-                <button type="submit" className="text-xs text-neutral-400 hover:text-neutral-700">
-                  ⚑ rapporteer
-                </button>
+
+              {(repliesByParent.get(comment.id) ?? []).map((reply) => (
+                <div key={reply.id} className="ml-6 rounded-lg border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-400">
+                    {reply.author.name ?? reply.author.email}
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{reply.content}</p>
+                  <form action={toggleReaction} className="mt-2">
+                    <input type="hidden" name="targetType" value="comment" />
+                    <input type="hidden" name="targetId" value={reply.id} />
+                    <button
+                      type="submit"
+                      className={`text-xs hover:text-neutral-700 ${myReacted.has(reply.id) ? "font-medium text-neutral-900" : "text-neutral-400"}`}
+                    >
+                      ♥ {commentReactions.get(reply.id) ?? 0}
+                    </button>
+                  </form>
+                </div>
+              ))}
+
+              <form action={createComment} className="ml-6 flex gap-2">
+                <input type="hidden" name="postId" value={post.id} />
+                <input type="hidden" name="parentId" value={comment.id} />
+                <input
+                  name="content"
+                  required
+                  placeholder="Antwoord…"
+                  className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                />
+                <Button type="submit" size="sm" variant="ghost">
+                  Antwoord
+                </Button>
               </form>
             </div>
           ))}
