@@ -134,6 +134,9 @@ export default async function DashboardPage() {
         <Link href={`/members/${session.user.id}`} className="text-neutral-700 underline">
           Mijn profiel
         </Link>
+        <Link href="/referral" className="text-neutral-700 underline">
+          Uitnodigen
+        </Link>
       </div>
 
       <div className="mt-6">
