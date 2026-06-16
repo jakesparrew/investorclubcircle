@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { sendMessage } from "@/lib/chat";
+import { sendMessage, addGroupMember } from "@/lib/chat";
 import { ChatAutoRefresh } from "@/components/ChatAutoRefresh";
 import { Button } from "@/components/ui/button";
 
@@ -60,6 +60,27 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         ← Berichten
       </Link>
       <h1 className="mt-2 mb-4 text-xl font-bold">{title}</h1>
+
+      {conversation.type === "group" && (
+        <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-3 text-sm">
+          <div className="mb-2 text-neutral-500">
+            {conversation.members.map((m) => m.user.name ?? m.user.email).join(", ")}
+          </div>
+          <form action={addGroupMember} className="flex gap-2">
+            <input type="hidden" name="conversationId" value={conversation.id} />
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="Lid toevoegen (e-mail)…"
+              className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+            />
+            <Button type="submit" size="sm" variant="outline">
+              +
+            </Button>
+          </form>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {[...conversation.messages].reverse().map((msg) => {

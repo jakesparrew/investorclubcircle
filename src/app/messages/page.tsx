@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { startDirectByEmail } from "@/lib/chat";
+import { startDirectByEmail, createGroup } from "@/lib/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,11 +60,22 @@ export default async function MessagesPage() {
       <h1 className="mb-1 text-2xl font-bold">Berichten</h1>
       <p className="mb-6 text-sm text-neutral-500">Directe gesprekken met andere leden.</p>
 
-      <Card className="mb-6">
+      <Card className="mb-3">
         <CardContent className="pt-6">
           <form action={startDirectByEmail} className="flex gap-2">
             <Input type="email" name="email" placeholder="E-mail van het lid…" required />
             <Button type="submit">Start gesprek</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <form action={createGroup} className="flex gap-2">
+            <Input name="title" placeholder="Naam nieuwe groep…" required />
+            <Button type="submit" variant="outline">
+              Maak groep
+            </Button>
           </form>
         </CardContent>
       </Card>

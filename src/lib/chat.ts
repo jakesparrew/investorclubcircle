@@ -94,3 +94,49 @@ export async function sendMessage(formData: FormData) {
   revalidatePath(`/messages/${conversationId}`);
   revalidatePath("/messages");
 }
+
+/** Create a group conversation; the creator becomes its admin. */
+export async function createGroup(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return;
+
+  const convo = await db.conversation.create({
+    data: {
+      type: "group",
+      title,
+      createdById: session.user.id,
+      members: { create: [{ userId: session.user.id, role: "admin" }] },
+    },
+  });
+  redirect(`/messages/${convo.id}`);
+}
+
+/** Add a member (by email) to a group the requester belongs to. */
+export async function addGroupMember(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const conversationId = String(formData.get("conversationId") ?? "");
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  if (!conversationId || !email) return;
+
+  const membership = await db.conversationMember.findUnique({
+    where: { conversationId_userId: { conversationId, userId: session.user.id } },
+  });
+  if (!membership) throw new Error("Geen toegang tot dit gesprek");
+  const convo = await db.conversation.findUnique({ where: { id: conversationId } });
+  if (!convo || convo.type !== "group") return;
+
+  const other = await db.user.findUnique({ where: { email } });
+  if (!other) throw new Error("Geen gebruiker met dat e-mailadres");
+
+  await db.conversationMember.upsert({
+    where: { conversationId_userId: { conversationId, userId: other.id } },
+    update: {},
+    create: { conversationId, userId: other.id },
+  });
+  revalidatePath(`/messages/${conversationId}`);
+}
