@@ -6,6 +6,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { getUserTotalPoints, getLevelForPoints } from "@/lib/points";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { DailyCheckin } from "@/components/DailyCheckin";
 import { toggleNewsletterOptIn } from "@/lib/newsletter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
+      <DailyCheckin />
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Welkom{session.user.name ? `, ${session.user.name}` : ""}</h1>
