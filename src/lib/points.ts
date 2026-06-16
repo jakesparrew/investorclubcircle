@@ -58,6 +58,29 @@ export type LeaderboardRow = {
   points: number;
 };
 
+/** Consecutive-day login streak, derived from the daily_login points ledger. */
+export async function getLoginStreak(userId: string): Promise<number> {
+  const rows = await db.pointsLedger.findMany({
+    where: { userId, reason: "daily_login" },
+    select: { sourceId: true },
+    orderBy: { createdAt: "desc" },
+    take: 90,
+  });
+  const days = new Set(rows.map((r) => r.sourceId).filter((s): s is string => Boolean(s)));
+  const ymd = (date: Date) => date.toISOString().slice(0, 10);
+  const cursor = new Date();
+  if (!days.has(ymd(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!days.has(ymd(cursor))) return 0;
+  }
+  let streak = 0;
+  while (days.has(ymd(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
 export async function getLeaderboard(limit = 20): Promise<LeaderboardRow[]> {
   const rows = await db.pointsLedger.groupBy({
     by: ["userId"],

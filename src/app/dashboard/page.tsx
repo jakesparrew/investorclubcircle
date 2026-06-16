@@ -4,7 +4,7 @@ import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
-import { getUserTotalPoints, getLevelForPoints } from "@/lib/points";
+import { getUserTotalPoints, getLevelForPoints, getLoginStreak } from "@/lib/points";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { DailyCheckin } from "@/components/DailyCheckin";
 import { toggleNewsletterOptIn } from "@/lib/newsletter";
@@ -24,6 +24,7 @@ export default async function DashboardPage() {
   let orgId: string | null = null;
   let points = 0;
   let levelName = "—";
+  let streak = 0;
   let newsletterOptIn = false;
   try {
     const org = await db.organization.findFirst();
@@ -45,6 +46,7 @@ export default async function DashboardPage() {
     const ctx = await getAccessContext(session.user.id, session.user.role);
     premiumOk = canAccess(ctx, { minTier: "premium" }).ok;
     points = await getUserTotalPoints(session.user.id);
+    streak = await getLoginStreak(session.user.id);
     if (orgId) {
       const level = await getLevelForPoints(orgId, points);
       if (level) levelName = level.name;
@@ -95,6 +97,12 @@ export default async function DashboardPage() {
               <span className="text-neutral-500">Punten</span>
               <span className="font-medium">
                 {points} · {levelName}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Streak</span>
+              <span className="font-medium">
+                {streak} dag{streak === 1 ? "" : "en"} 🔥
               </span>
             </div>
           </CardContent>
