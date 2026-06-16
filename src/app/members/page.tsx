@@ -41,11 +41,16 @@ export default async function MembersPage() {
       <div className="grid gap-3 sm:grid-cols-2">
         {members.map((m) => (
           <div key={m.id} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-4">
-            <div>
-              <Link href={`/members/${m.id}`} className="font-medium hover:underline">
-                {m.name ?? "Lid"}
-              </Link>
-              {m.profile?.headline && <div className="text-sm text-neutral-500">{m.profile.headline}</div>}
+            <div className="flex items-center gap-3">
+              {m.image && <img src={m.image} alt="" className="h-9 w-9 rounded-full object-cover" />}
+              <div>
+                <Link href={`/members/${m.id}`} className="font-medium hover:underline">
+                  {m.name ?? "Lid"}
+                </Link>
+                {m.profile?.headline && (
+                  <div className="text-sm text-neutral-500">{m.profile.headline}</div>
+                )}
+              </div>
             </div>
             {m.id !== session.user.id && (
               <form action={startDirectByUserId}>

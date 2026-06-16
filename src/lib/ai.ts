@@ -83,6 +83,39 @@ export async function generateSocialVariants(formData: FormData) {
   revalidatePath("/admin/social");
 }
 
+/** Generate a short TL;DR summary of a post (stored as an AIJob for review). */
+export async function summarizePost(formData: FormData) {
+  await requireHostOrAdmin();
+  const postId = String(formData.get("postId") ?? "");
+  if (!postId) return;
+
+  const post = await db.post.findUnique({ where: { id: postId }, include: { space: true } });
+  if (!post) return;
+  const org = await db.organization.findFirst();
+  if (!org) throw new Error("Geen organisatie geconfigureerd");
+
+  const job = await db.aIJob.create({
+    data: { orgId: org.id, type: "summary", inputRef: postId, status: "running" },
+  });
+  try {
+    const client = anthropic();
+    const prompt =
+      `Vat deze community-post bondig samen in maximaal 2 zinnen (Nederlands, zakelijk, ` +
+      `geen rendementbeloftes):\n\n${post.title ? post.title + "\n" : ""}${post.content}`;
+    const message = await client.messages.create({
+      model: MODEL,
+      max_tokens: 256,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const summary = extractText(message).trim();
+    await db.aIJob.update({ where: { id: job.id }, data: { status: "review", output: { summary } } });
+  } catch (err) {
+    await db.aIJob.update({ where: { id: job.id }, data: { status: "failed" } });
+    throw err;
+  }
+  revalidatePath(`/community/${post.space.slug}/${postId}`);
+}
+
 export async function approveSocialPost(formData: FormData) {
   await requireHostOrAdmin();
   const id = String(formData.get("id") ?? "");

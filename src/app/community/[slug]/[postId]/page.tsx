@@ -6,7 +6,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { createComment, toggleReaction, toggleBookmark, votePoll } from "@/lib/community";
-import { generateSocialVariants } from "@/lib/ai";
+import { generateSocialVariants, summarizePost } from "@/lib/ai";
 import { reportContent } from "@/lib/moderation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,6 +83,12 @@ export default async function PostPage({
     votedOptionIds = new Set(votes.map((v) => v.pollOptionId));
   }
 
+  const summaryJob = await db.aIJob.findFirst({
+    where: { type: "summary", inputRef: post.id, status: "review" },
+    orderBy: { createdAt: "desc" },
+  });
+  const summaryText = (summaryJob?.output as { summary?: string } | null)?.summary ?? null;
+
   const path = `/community/${slug}/${postId}`;
 
   return (
@@ -96,6 +102,11 @@ export default async function PostPage({
         <div className="mt-1 text-xs text-neutral-400">
           {post.author.name ?? post.author.email}
         </div>
+        {summaryText && (
+          <div className="mt-2 rounded-md bg-neutral-100 p-3 text-sm text-neutral-700">
+            <span className="font-medium">TL;DR:</span> {summaryText}
+          </div>
+        )}
         <p className="mt-3 whitespace-pre-wrap text-sm text-neutral-800">{post.content}</p>
 
         {post.poll && (
@@ -139,12 +150,20 @@ export default async function PostPage({
             </Button>
           </form>
           {(session.user.role === "ADMIN" || session.user.role === "EXPERT") && (
-            <form action={generateSocialVariants}>
-              <input type="hidden" name="postId" value={post.id} />
-              <Button type="submit" size="sm" variant="ghost">
-                ✨ AI: social
-              </Button>
-            </form>
+            <>
+              <form action={generateSocialVariants}>
+                <input type="hidden" name="postId" value={post.id} />
+                <Button type="submit" size="sm" variant="ghost">
+                  ✨ AI: social
+                </Button>
+              </form>
+              <form action={summarizePost}>
+                <input type="hidden" name="postId" value={post.id} />
+                <Button type="submit" size="sm" variant="ghost">
+                  📝 AI: TL;DR
+                </Button>
+              </form>
+            </>
           )}
           <form action={reportContent}>
             <input type="hidden" name="targetType" value="post" />

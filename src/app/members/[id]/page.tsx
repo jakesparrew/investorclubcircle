@@ -46,6 +46,9 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       </Link>
       <div className="mt-3 flex items-start justify-between">
         <div>
+          {member.image && (
+            <img src={member.image} alt="" className="mb-2 h-16 w-16 rounded-full object-cover" />
+          )}
           <h1 className="text-2xl font-bold">{member.name ?? "Lid"}</h1>
           {member.profile?.headline && <p className="text-neutral-600">{member.profile.headline}</p>}
           <div className="mt-2 flex items-center gap-2">
