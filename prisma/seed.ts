@@ -262,6 +262,22 @@ async function main() {
     }
   }
 
+  // MOCK memberships so you can see tier-gating: Lara = basis, Yusuf = premium.
+  const basisTier = await db.tier.findUnique({ where: { orgId_key: { orgId: org.id, key: "basis" } } });
+  const premiumTier = await db.tier.findUnique({ where: { orgId_key: { orgId: org.id, key: "premium" } } });
+  const demoMemberships: [string, string | undefined][] = [
+    ["demo_lara", basisTier?.id],
+    ["demo_yusuf", premiumTier?.id],
+  ];
+  for (const [uid, tierId] of demoMemberships) {
+    if (!tierId) continue;
+    await db.membership.upsert({
+      where: { userId_orgId: { userId: uid, orgId: org.id } },
+      update: { tierId, status: "active", interval: "month" },
+      create: { userId: uid, orgId: org.id, tierId, status: "active", interval: "month" },
+    });
+  }
+
   // MOCK podcast episodes (audioUrl is fake) + one livestream recording (real public video as placeholder).
   const demoEpisodes = [
     { id: "demo_ep_1", title: "Aflevering 1 — Marktupdate", description: "De crypto-week in 20 minuten.", audioUrl: "https://example.com/podcast/ep1.mp3" },
