@@ -2,28 +2,119 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * ── Theme tokens (shadcn / tweakcn compatible) ──────────────────────────────
+ * This :root + .dark block is the ONLY thing you replace when pasting a
+ * tweakcn export — every surface in the app is wired to these variables via
+ * the @theme inline mapping below, so a paste reskins the whole product.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
-  --surface: #f7f8f9;
-  --brand: #1f7a4d;
-  --brand-hover: #18653f;
+  --radius: 0.65rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.21 0.006 285.9);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.006 285.9);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.006 285.9);
+
+  --primary: oklch(0.55 0.114 157.9);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.4);
+  --secondary-foreground: oklch(0.21 0.006 285.9);
+  --muted: oklch(0.967 0.001 286.4);
+  --muted-foreground: oklch(0.552 0.014 285.9);
+  --accent: oklch(0.95 0.03 157.9);
+  --accent-foreground: oklch(0.37 0.08 157.9);
+
+  --destructive: oklch(0.577 0.245 27.3);
+  --destructive-foreground: oklch(0.985 0 0);
+  --success: oklch(0.6 0.13 160);
+  --warning: oklch(0.75 0.15 75);
+
+  --border: oklch(0.92 0.004 286.3);
+  --input: oklch(0.92 0.004 286.3);
+  --ring: oklch(0.55 0.114 157.9);
+
+  --chart-1: oklch(0.55 0.114 157.9);
+  --chart-2: oklch(0.6 0.1 200);
+  --chart-3: oklch(0.72 0.15 70);
+  --chart-4: oklch(0.55 0.18 290);
+  --chart-5: oklch(0.62 0.13 250);
 }
 
 .dark {
-  --background: #0f0f11;
-  --foreground: #f4f4f5;
-  --surface: #161618;
-  --brand: #2a9d63;
-  --brand-hover: #34b673;
+  --background: oklch(0.16 0.004 285.8);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.2 0.004 285.8);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.2 0.004 285.8);
+  --popover-foreground: oklch(0.96 0 0);
+
+  --primary: oklch(0.68 0.14 158);
+  --primary-foreground: oklch(0.16 0.01 158);
+  --secondary: oklch(0.27 0.005 286);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.26 0.005 286);
+  --muted-foreground: oklch(0.71 0.01 286);
+  --accent: oklch(0.3 0.04 158);
+  --accent-foreground: oklch(0.9 0.05 158);
+
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.96 0 0);
+  --success: oklch(0.65 0.13 160);
+  --warning: oklch(0.78 0.15 75);
+
+  --border: oklch(0.28 0.004 286);
+  --input: oklch(0.3 0.004 286);
+  --ring: oklch(0.68 0.14 158);
+
+  --chart-1: oklch(0.68 0.14 158);
+  --chart-2: oklch(0.65 0.1 200);
+  --chart-3: oklch(0.75 0.15 70);
+  --chart-4: oklch(0.62 0.18 290);
+  --chart-5: oklch(0.66 0.13 250);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-brand: var(--brand);
-  --color-brand-hover: var(--brand-hover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Back-compat aliases used across the existing app — follow the tokens, so
+     they re-skin together with everything else when a tweakcn export lands. */
+  --color-brand: var(--primary);
+  --color-brand-hover: color-mix(in oklch, var(--primary) 88%, black);
+  --color-surface: var(--muted);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -35,33 +126,33 @@ body {
 }
 
 /*
- * Dark-mode retrofit. The app is built on Tailwind's neutral palette; rather
- * than annotate every element with a dark: variant, we remap the handful of
- * neutral utilities the UI actually uses when inside a .dark ancestor. The
- * extra `.dark` specificity (0,2,0) cleanly overrides the base utility (0,1,0).
+ * Legacy dark-mode retrofit. Pages that still use raw neutral utilities
+ * (bg-white / neutral-*) instead of semantic tokens get remapped here so dark
+ * mode stays coherent. New surfaces (dashboard, primitives) use tokens and
+ * follow tweakcn exports directly — these are only a fallback for the rest.
  */
-.dark .bg-white { background-color: #18181b; }
-.dark .bg-neutral-50 { background-color: #1a1a1d; }
-.dark .bg-neutral-100 { background-color: #242427; }
-.dark .bg-neutral-200 { background-color: #2e2e33; }
+.dark .bg-white { background-color: var(--card); }
+.dark .bg-neutral-50 { background-color: oklch(0.23 0.004 286); }
+.dark .bg-neutral-100 { background-color: oklch(0.27 0.004 286); }
+.dark .bg-neutral-200 { background-color: oklch(0.32 0.004 286); }
 
-.dark .text-neutral-900 { color: #f4f4f5; }
-.dark .text-neutral-800 { color: #e4e4e7; }
-.dark .text-neutral-700 { color: #d4d4d8; }
-.dark .text-neutral-600 { color: #b6b6bd; }
-.dark .text-neutral-500 { color: #9a9aa2; }
-.dark .text-neutral-400 { color: #7d7d86; }
+.dark .text-neutral-900 { color: oklch(0.96 0 0); }
+.dark .text-neutral-800 { color: oklch(0.9 0 0); }
+.dark .text-neutral-700 { color: oklch(0.84 0.005 286); }
+.dark .text-neutral-600 { color: oklch(0.74 0.01 286); }
+.dark .text-neutral-500 { color: oklch(0.64 0.012 286); }
+.dark .text-neutral-400 { color: oklch(0.55 0.012 286); }
 
-.dark .border-neutral-100 { border-color: #242427; }
-.dark .border-neutral-200 { border-color: #2a2a2e; }
-.dark .border-neutral-300 { border-color: #353539; }
+.dark .border-neutral-100 { border-color: oklch(0.27 0.004 286); }
+.dark .border-neutral-200 { border-color: oklch(0.3 0.004 286); }
+.dark .border-neutral-300 { border-color: oklch(0.36 0.004 286); }
 
-.dark .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) { border-color: #242427; }
-.dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: #2a2a2e; }
+.dark .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) { border-color: oklch(0.27 0.004 286); }
+.dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: oklch(0.3 0.004 286); }
 
-.dark .hover\:bg-neutral-50:hover { background-color: #1f1f23; }
-.dark .hover\:bg-neutral-100:hover { background-color: #26262b; }
-.dark .hover\:bg-neutral-200:hover { background-color: #2e2e33; }
+.dark .hover\:bg-neutral-50:hover { background-color: oklch(0.26 0.004 286); }
+.dark .hover\:bg-neutral-100:hover { background-color: oklch(0.29 0.004 286); }
+.dark .hover\:bg-neutral-200:hover { background-color: oklch(0.33 0.004 286); }
 
-.dark .ring-neutral-200 { --tw-ring-color: #2a2a2e; }
-.dark .ring-white { --tw-ring-color: #18181b; }
+.dark .ring-neutral-200 { --tw-ring-color: oklch(0.3 0.004 286); }
+.dark .ring-white { --tw-ring-color: var(--card); }
