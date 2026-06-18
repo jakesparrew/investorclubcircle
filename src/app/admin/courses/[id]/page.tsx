@@ -58,7 +58,7 @@ export default async function AdminCourseEditPage({ params }: { params: Promise<
             <h2 className="mb-3 font-semibold">{m.title}</h2>
             <div className="mb-3 flex flex-col gap-1">
               {m.lessons.map((l) => (
-                <div key={l.id} className="flex items-center gap-2 text-sm text-neutral-700">
+                <div key={l.id} className="flex flex-wrap items-center gap-2 text-sm text-neutral-700">
                   • {l.title}
                   {l.isPreview && <Badge variant="secondary">preview</Badge>}
                   {l.dripOffsetDays ? <Badge variant="secondary">drip {l.dripOffsetDays}d</Badge> : null}
@@ -80,7 +80,7 @@ export default async function AdminCourseEditPage({ params }: { params: Promise<
                 className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
               />
               <Input name="videoUrl" placeholder="Video embed-URL (optioneel)" />
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-3 text-sm">
                 <label className="flex items-center gap-2">
                   <input type="checkbox" name="isPreview" /> Preview
                 </label>

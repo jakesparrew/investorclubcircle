@@ -44,7 +44,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       <Link href="/members" className="text-sm text-neutral-500 hover:text-neutral-900">
         ← Leden
       </Link>
-      <div className="mt-3 flex items-start justify-between">
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           {member.image && (
             <img src={member.image} alt="" className="mb-2 h-16 w-16 rounded-full object-cover" />

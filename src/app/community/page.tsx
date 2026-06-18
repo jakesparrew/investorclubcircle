@@ -36,6 +36,7 @@ export default async function CommunityPage() {
           title: p.title,
           content: p.content,
           pinned: p.pinned,
+          createdAt: p.createdAt,
           spaceName: p.space.name,
           spaceSlug: p.space.slug,
           authorName: p.author.name ?? p.author.email,

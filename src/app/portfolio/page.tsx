@@ -84,16 +84,16 @@ export default async function PortfolioPage() {
 
           <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
             {holdings.map((h) => (
-              <div key={h.symbol} className="flex items-center justify-between p-4">
-                <div>
-                  <div className="font-medium">
+              <div key={h.symbol} className="flex items-center justify-between gap-2 p-4">
+                <div className="min-w-0">
+                  <div className="truncate font-medium">
                     {h.name} <Badge variant="secondary">{h.symbol}</Badge>
                   </div>
                   <div className="text-xs text-neutral-400">
                     {h.amount} {h.symbol} · {formatMoney(h.priceCents)}
                   </div>
                 </div>
-                <span className="font-semibold">{formatMoney(holdingValueCents(h))}</span>
+                <span className="shrink-0 font-semibold">{formatMoney(holdingValueCents(h))}</span>
               </div>
             ))}
           </div>

@@ -133,7 +133,7 @@ export default async function PostPage({
       </Link>
 
       <article className="mt-3 rounded-xl border border-neutral-200 bg-white p-6">
-        {post.title && <h1 className="text-xl font-bold">{post.title}</h1>}
+        {post.title && <h1 className="text-xl font-bold break-words">{post.title}</h1>}
         <div className="mt-1 text-xs text-neutral-400">
           {post.author.name ?? post.author.email}
         </div>
@@ -142,7 +142,7 @@ export default async function PostPage({
             <span className="font-medium">TL;DR:</span> {summaryText}
           </div>
         )}
-        <p className="mt-3 whitespace-pre-wrap text-sm text-neutral-800">{post.content}</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-neutral-800">{post.content}</p>
 
         {post.poll && (
           <div className="mt-5 rounded-lg border border-neutral-200 p-4">
@@ -168,7 +168,7 @@ export default async function PostPage({
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <form action={toggleReaction}>
             <input type="hidden" name="targetType" value="post" />
             <input type="hidden" name="targetId" value={post.id} />

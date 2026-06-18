@@ -62,18 +62,20 @@ export default async function MessagesPage() {
 
       <Card className="mb-3">
         <CardContent className="pt-6">
-          <form action={startDirectByEmail} className="flex gap-2">
-            <Input type="email" name="email" placeholder="E-mail van het lid…" required />
-            <Button type="submit">Start gesprek</Button>
+          <form action={startDirectByEmail} className="flex flex-col gap-2 sm:flex-row">
+            <Input type="email" name="email" placeholder="E-mail van het lid…" required className="min-w-0" />
+            <Button type="submit" variant="brand" className="shrink-0">
+              Start gesprek
+            </Button>
           </form>
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <form action={createGroup} className="flex gap-2">
-            <Input name="title" placeholder="Naam nieuwe groep…" required />
-            <Button type="submit" variant="outline">
+          <form action={createGroup} className="flex flex-col gap-2 sm:flex-row">
+            <Input name="title" placeholder="Naam nieuwe groep…" required className="min-w-0" />
+            <Button type="submit" variant="outline" className="shrink-0">
               Maak groep
             </Button>
           </form>
