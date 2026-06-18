@@ -99,6 +99,11 @@ export default async function SpacePage({
               placeholder="Deel iets met de community…"
               className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             />
+            <p className="text-xs text-neutral-400">
+              Opmaak: <code className="rounded bg-neutral-100 px-1">**vet**</code>{" "}
+              <code className="rounded bg-neutral-100 px-1">*cursief*</code>{" "}
+              <code className="rounded bg-neutral-100 px-1">`code`</code> · @naam · links worden klikbaar
+            </p>
             <details className="text-sm">
               <summary className="cursor-pointer text-neutral-500">+ Poll toevoegen (optioneel)</summary>
               <div className="mt-2 flex flex-col gap-2">

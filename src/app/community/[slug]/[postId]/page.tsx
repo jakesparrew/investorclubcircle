@@ -13,6 +13,8 @@ import {
   deletePost,
   togglePinPost,
 } from "@/lib/community";
+import { REACTION_TYPES, REACTION_EMOJI } from "@/lib/reactions";
+import { renderRichText } from "@/lib/richtext";
 import { generateSocialVariants, summarizePost } from "@/lib/ai";
 import { reportContent } from "@/lib/moderation";
 import { Button } from "@/components/ui/button";
@@ -70,19 +72,19 @@ export default async function PostPage({
     redirect(`/community/${slug}`);
   }
 
-  const [reactionCount, userReaction] = await Promise.all([
-    db.reaction.count({ where: { targetType: "post", targetId: post.id } }),
-    db.reaction.findUnique({
-      where: {
-        targetType_targetId_userId_type: {
-          targetType: "post",
-          targetId: post.id,
-          userId: session.user.id,
-          type: "like",
-        },
-      },
+  const [reactionGroups, myReactions] = await Promise.all([
+    db.reaction.groupBy({
+      by: ["type"],
+      where: { targetType: "post", targetId: post.id },
+      _count: { _all: true },
+    }),
+    db.reaction.findMany({
+      where: { targetType: "post", targetId: post.id, userId: session.user.id },
+      select: { type: true },
     }),
   ]);
+  const countByType = new Map(reactionGroups.map((g) => [g.type, g._count._all]));
+  const myReactionTypes = new Set(myReactions.map((r) => r.type));
 
   let votedOptionIds = new Set<string>();
   if (post.poll) {
@@ -148,7 +150,9 @@ export default async function PostPage({
             <span className="font-medium">TL;DR:</span> {summaryText}
           </div>
         )}
-        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-neutral-800">{post.content}</p>
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-neutral-800">
+          {renderRichText(post.content)}
+        </p>
 
         {post.poll && (() => {
           const pollTotal = post.poll.options.reduce((s, o) => s + o._count.votes, 0);
@@ -194,14 +198,33 @@ export default async function PostPage({
           );
         })()}
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <form action={toggleReaction}>
-            <input type="hidden" name="targetType" value="post" />
-            <input type="hidden" name="targetId" value={post.id} />
-            <Button type="submit" size="sm" variant={userReaction ? "default" : "outline"}>
-              ♥ {reactionCount}
-            </Button>
-          </form>
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          {REACTION_TYPES.map((type) => {
+            const count = countByType.get(type) ?? 0;
+            const mine = myReactionTypes.has(type);
+            return (
+              <form key={type} action={toggleReaction}>
+                <input type="hidden" name="targetType" value="post" />
+                <input type="hidden" name="targetId" value={post.id} />
+                <input type="hidden" name="type" value={type} />
+                <button
+                  type="submit"
+                  aria-pressed={mine}
+                  className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition-colors ${
+                    mine
+                      ? "border-brand bg-brand/10 text-brand"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  }`}
+                >
+                  <span>{REACTION_EMOJI[type]}</span>
+                  {count > 0 && <span className="text-xs font-medium">{count}</span>}
+                </button>
+              </form>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <form action={toggleBookmark}>
             <input type="hidden" name="targetType" value="post" />
             <input type="hidden" name="targetId" value={post.id} />
@@ -289,7 +312,9 @@ export default async function PostPage({
                   </span>
                   <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(comment.createdAt)}</span>
                 </div>
-                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">{comment.content}</p>
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">
+                  {renderRichText(comment.content)}
+                </p>
                 <div className="mt-2 flex items-center gap-4">
                   <form action={toggleReaction}>
                     <input type="hidden" name="targetType" value="comment" />
@@ -321,7 +346,9 @@ export default async function PostPage({
                     </span>
                     <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(reply.createdAt)}</span>
                   </div>
-                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">{reply.content}</p>
+                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">
+                    {renderRichText(reply.content)}
+                  </p>
                   <form action={toggleReaction} className="mt-2">
                     <input type="hidden" name="targetType" value="comment" />
                     <input type="hidden" name="targetId" value={reply.id} />

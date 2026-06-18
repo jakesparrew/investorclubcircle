@@ -9,6 +9,7 @@ import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
 import { completeLesson, submitQuiz, addLessonComment } from "@/lib/academy";
 import { normalizeVideoUrl } from "@/lib/video";
+import { renderRichText } from "@/lib/richtext";
 import { timeAgo } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -188,7 +189,7 @@ export default async function LessonPage({
         )}
 
         <article className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-neutral-800">
-          {lesson.content}
+          {renderRichText(lesson.content)}
         </article>
 
         {lesson.quiz ? (

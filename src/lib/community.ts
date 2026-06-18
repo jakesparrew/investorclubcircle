@@ -9,6 +9,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { awardPoints, awardPointsOnce, POINTS } from "@/lib/points";
+import { REACTION_TYPES } from "@/lib/reactions";
 import { notify } from "@/lib/notify";
 
 async function requireSession(): Promise<Session> {
@@ -120,6 +121,9 @@ export async function toggleReaction(formData: FormData) {
   const targetId = String(formData.get("targetId") ?? "");
   if (!["post", "comment"].includes(targetType) || !targetId) return;
 
+  const typeRaw = String(formData.get("type") ?? "like");
+  const type = (REACTION_TYPES as readonly string[]).includes(typeRaw) ? typeRaw : "like";
+
   let authorId: string | undefined;
   let slug: string | undefined;
   let postId: string | undefined;
@@ -149,7 +153,7 @@ export async function toggleReaction(formData: FormData) {
         targetType,
         targetId,
         userId: session.user.id,
-        type: "like",
+        type,
       },
     },
   });
@@ -157,7 +161,7 @@ export async function toggleReaction(formData: FormData) {
   if (existing) {
     await db.reaction.delete({ where: { id: existing.id } });
   } else {
-    await db.reaction.create({ data: { targetType, targetId, userId: session.user.id, type: "like" } });
+    await db.reaction.create({ data: { targetType, targetId, userId: session.user.id, type } });
     await awardPointsOnce(session.user.id, POINTS.reaction_given, "reaction_given", targetType, targetId);
     if (authorId && authorId !== session.user.id) {
       await awardPointsOnce(authorId, POINTS.reaction_received, "reaction_received", targetType, targetId);
