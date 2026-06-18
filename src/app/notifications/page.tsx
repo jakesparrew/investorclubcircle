@@ -10,10 +10,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Meldingen — InvestorClub" };
 
 function message(n: Notification): { text: string; link?: string } {
-  const p = (n.payload ?? {}) as { link?: string; by?: string; title?: string };
+  const p = (n.payload ?? {}) as { link?: string; by?: string; title?: string; body?: string };
   const by = p.by ?? "Iemand";
   if (n.type === "comment") return { text: `${by} reageerde op ${p.title ?? "je post"}`, link: p.link };
   if (n.type === "reply") return { text: `${by} antwoordde op je reactie`, link: p.link };
+  if (n.type === "announcement")
+    return { text: `📣 ${p.title ?? "Aankondiging"}${p.body ? ` — ${p.body}` : ""}`, link: p.link };
   return { text: n.type, link: p.link };
 }
 
