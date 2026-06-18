@@ -17,7 +17,7 @@ export default function HomePage() {
         <div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/pricing"
-            className="rounded-md bg-neutral-900 px-5 py-2.5 font-medium text-white hover:bg-neutral-800"
+            className="rounded-md bg-brand px-5 py-2.5 font-medium text-white hover:bg-brand-hover"
           >
             Word lid
           </Link>

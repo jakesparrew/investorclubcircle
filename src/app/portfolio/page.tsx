@@ -62,7 +62,9 @@ export default async function PortfolioPage() {
               Koppel je investeren.org-account om je portfolio hier te zien.
             </p>
             <form action={linkPortfolio}>
-              <Button type="submit">Koppel investeren.org</Button>
+              <Button type="submit" variant="brand">
+                Koppel investeren.org
+              </Button>
             </form>
           </CardContent>
         </Card>

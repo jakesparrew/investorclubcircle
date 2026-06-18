@@ -128,7 +128,7 @@ export default async function LessonPage({
                 </fieldset>
               ))}
               <div>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" variant="brand">
                   Verstuur antwoorden
                 </Button>
               </div>
@@ -139,7 +139,9 @@ export default async function LessonPage({
         !isDone && (
           <form action={completeLesson} className="mt-8">
             <input type="hidden" name="lessonId" value={lesson.id} />
-            <Button type="submit">Markeer als voltooid</Button>
+            <Button type="submit" variant="brand">
+              Markeer als voltooid
+            </Button>
           </form>
         )
       )}

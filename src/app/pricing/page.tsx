@@ -44,7 +44,12 @@ export default async function PricingPage() {
                   : "Gratis"}
               </div>
               <form action={startSubscriptionCheckout.bind(null, tier.id, "month")}>
-                <Button type="submit" className="w-full" disabled={tier.key === "free"}>
+                <Button
+                  type="submit"
+                  variant={tier.key === "free" ? "outline" : "brand"}
+                  className="w-full"
+                  disabled={tier.key === "free"}
+                >
                   {tier.key === "free" ? "Standaard" : "Word lid"}
                 </Button>
               </form>

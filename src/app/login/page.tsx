@@ -38,7 +38,7 @@ export default async function LoginPage({
           <form action={magicLinkSignIn} className="flex flex-col gap-3">
             <input type="hidden" name="callbackUrl" value={target} />
             <Input type="email" name="email" placeholder="jij@email.be" required autoComplete="email" />
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="brand" className="w-full">
               Stuur magische link
             </Button>
           </form>

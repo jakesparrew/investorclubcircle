@@ -102,13 +102,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
-              <div className="h-full bg-neutral-900" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
             </div>
           </div>
         ) : (
           <form action={enrollInCourse}>
             <input type="hidden" name="courseId" value={course.id} />
-            <Button type="submit">Schrijf je in</Button>
+            <Button type="submit" variant="brand">
+              Schrijf je in
+            </Button>
           </form>
         )}
         {certificate && <Badge variant="success">🎓 Certificaat behaald</Badge>}
