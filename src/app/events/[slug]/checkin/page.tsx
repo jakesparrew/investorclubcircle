@@ -13,8 +13,16 @@ type EventWithRegistrations = Prisma.EventGetPayload<{
   include: { registrations: { include: { user: { select: { name: true; email: true } } } } };
 }>;
 
-export default async function CheckinPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CheckinPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string }>;
+}) {
   const { slug } = await params;
+  const { q } = await searchParams;
+  const query = (q ?? "").trim().toLowerCase();
   const session = await auth();
   if (!session?.user) redirect(`/login?callbackUrl=/events/${slug}/checkin`);
 
@@ -41,7 +49,15 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
     redirect(`/events/${slug}`);
   }
 
-  const attendees = event.registrations.filter((r) => r.status !== "cancelled");
+  const notCancelled = event.registrations.filter((r) => r.status !== "cancelled");
+  // Denominator = confirmed seats only; waitlisted aren't expected to attend.
+  const confirmed = notCancelled.filter((r) => r.status !== "waitlisted");
+  const checkedIn = confirmed.filter((r) => r.checkedInAt).length;
+  const visible = query
+    ? notCancelled.filter((r) =>
+        `${r.user.name ?? ""} ${r.user.email}`.toLowerCase().includes(query),
+      )
+    : notCancelled;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -49,12 +65,21 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         ← {event.title}
       </Link>
       <h1 className="mt-2 text-2xl font-bold">Check-in</h1>
-      <p className="mb-6 text-sm text-neutral-500">
-        {attendees.filter((r) => r.checkedInAt).length} / {attendees.length} ingecheckt
+      <p className="mb-4 text-sm text-neutral-500">
+        {checkedIn} / {confirmed.length} ingecheckt
       </p>
 
+      <form method="GET" className="mb-4">
+        <input
+          name="q"
+          defaultValue={q ?? ""}
+          placeholder="Zoek op naam of e-mail…"
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+        />
+      </form>
+
       <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
-        {attendees.map((reg) => (
+        {visible.map((reg) => (
           <div key={reg.id} className="flex items-center justify-between p-4">
             <div>
               <div className="font-medium">{reg.user.name ?? reg.user.email}</div>
@@ -77,8 +102,10 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
         ))}
-        {attendees.length === 0 && (
-          <p className="p-6 text-center text-sm text-neutral-400">Nog geen inschrijvingen.</p>
+        {visible.length === 0 && (
+          <p className="p-6 text-center text-sm text-neutral-400">
+            {query ? "Geen inschrijvingen gevonden." : "Nog geen inschrijvingen."}
+          </p>
         )}
       </div>
     </div>

@@ -44,8 +44,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
 
   return (
-    <html lang="nl" className="h-full antialiased">
-      <body className="min-h-full bg-white text-neutral-900">
+    <html lang="nl" className="h-full antialiased" suppressHydrationWarning>
+      <body className="min-h-full bg-background text-foreground">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})()",
+          }}
+        />
         <PWARegister />
         {session?.user ? (
           <AppShell

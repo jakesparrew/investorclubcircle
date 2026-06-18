@@ -3,14 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, User, Bookmark, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, User, Bookmark, Settings, LogOut, Moon, Sun } from "lucide-react";
 
 type MenuUser = { id: string; name: string | null; image: string | null; role: string };
 
 export function UserMenu({ user }: { user: MenuUser }) {
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const initials = (user.name ?? "?").trim().slice(0, 1).toUpperCase() || "?";
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("theme", next ? "dark" : "light");
+    } catch {
+      // ignore storage failures (private mode)
+    }
+    setDark(next);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -86,6 +102,18 @@ export function UserMenu({ user }: { user: MenuUser }) {
               <span className="min-w-0 truncate">Adminpaneel</span>
             </Link>
           )}
+          <button
+            role="menuitem"
+            onClick={toggleTheme}
+            className="flex w-full items-center gap-2.5 border-t border-neutral-100 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+          >
+            {dark ? (
+              <Sun className="size-4 shrink-0 text-neutral-400" />
+            ) : (
+              <Moon className="size-4 shrink-0 text-neutral-400" />
+            )}
+            {dark ? "Licht thema" : "Donker thema"}
+          </button>
           <button
             role="menuitem"
             onClick={() => {

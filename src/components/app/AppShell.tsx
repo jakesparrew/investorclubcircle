@@ -23,6 +23,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { UserMenu } from "@/components/app/UserMenu";
+import { CommandPalette } from "@/components/app/CommandPalette";
 
 type SpaceItem = { name: string; slug: string; accessible: boolean };
 type Group = { name: string; spaces: SpaceItem[] };
@@ -73,6 +74,7 @@ export function AppShell({
 
   return (
     <div className="min-h-full">
+      <CommandPalette isAdmin={user.role === "ADMIN"} />
       <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
         <div className="flex h-14 items-center gap-2 px-3 sm:px-4">
           <button

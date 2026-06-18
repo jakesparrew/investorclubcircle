@@ -150,29 +150,49 @@ export default async function PostPage({
         )}
         <p className="mt-3 whitespace-pre-wrap break-words text-sm text-neutral-800">{post.content}</p>
 
-        {post.poll && (
-          <div className="mt-5 rounded-lg border border-neutral-200 p-4">
-            <div className="mb-3 font-medium">{post.poll.question}</div>
-            <div className="flex flex-col gap-2">
-              {post.poll.options.map((opt) => (
-                <form key={opt.id} action={votePoll}>
-                  <input type="hidden" name="pollOptionId" value={opt.id} />
-                  <button
-                    type="submit"
-                    className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm hover:bg-neutral-50 ${
-                      votedOptionIds.has(opt.id)
-                        ? "border-neutral-900 font-medium"
-                        : "border-neutral-200"
-                    }`}
-                  >
-                    <span>{opt.text}</span>
-                    <span className="text-neutral-400">{opt._count.votes}</span>
-                  </button>
-                </form>
-              ))}
+        {post.poll && (() => {
+          const pollTotal = post.poll.options.reduce((s, o) => s + o._count.votes, 0);
+          const hasVoted = votedOptionIds.size > 0;
+          return (
+            <div className="mt-5 rounded-lg border border-neutral-200 p-4">
+              <div className="mb-3 font-medium">{post.poll.question}</div>
+              <div className="flex flex-col gap-2">
+                {post.poll.options.map((opt) => {
+                  const pct = pollTotal ? Math.round((opt._count.votes / pollTotal) * 100) : 0;
+                  const mine = votedOptionIds.has(opt.id);
+                  return (
+                    <form key={opt.id} action={votePoll}>
+                      <input type="hidden" name="pollOptionId" value={opt.id} />
+                      <button
+                        type="submit"
+                        className={`relative flex w-full items-center justify-between overflow-hidden rounded-md border px-3 py-2 text-sm hover:bg-neutral-50 ${
+                          mine ? "border-brand font-medium" : "border-neutral-200"
+                        }`}
+                      >
+                        {hasVoted && (
+                          <span
+                            className={`absolute inset-y-0 left-0 ${mine ? "bg-brand/15" : "bg-neutral-100"}`}
+                            style={{ width: `${pct}%` }}
+                            aria-hidden
+                          />
+                        )}
+                        <span className="relative min-w-0 truncate">{opt.text}</span>
+                        <span className="relative shrink-0 pl-3 text-neutral-500">
+                          {hasVoted ? `${pct}% · ${opt._count.votes}` : opt._count.votes}
+                        </span>
+                      </button>
+                    </form>
+                  );
+                })}
+              </div>
+              {pollTotal > 0 && (
+                <div className="mt-2 text-xs text-neutral-400">
+                  {pollTotal} {pollTotal === 1 ? "stem" : "stemmen"}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <form action={toggleReaction}>

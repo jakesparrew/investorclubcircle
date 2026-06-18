@@ -211,10 +211,14 @@ export default async function LessonPage({
                           type={q.type === "multiple" ? "checkbox" : "radio"}
                           name={`q_${q.id}`}
                           value={a.id}
+                          required={q.type !== "multiple"}
                         />
                         {a.text}
                       </label>
                     ))}
+                    {q.type === "multiple" && (
+                      <span className="text-xs text-neutral-400">Meerdere antwoorden mogelijk</span>
+                    )}
                   </fieldset>
                 ))}
                 <div>
