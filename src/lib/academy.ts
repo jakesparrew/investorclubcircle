@@ -150,6 +150,51 @@ export async function submitQuiz(formData: FormData) {
   revalidatePath(`/academy/${course.slug}/${quiz.lessonId}`);
 }
 
+export async function submitCourseReview(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const courseId = String(formData.get("courseId") ?? "");
+  const rating = Math.max(0, Math.min(5, parseInt(String(formData.get("rating") ?? ""), 10) || 0));
+  const body = String(formData.get("body") ?? "").trim() || null;
+  if (!courseId || !rating) return;
+
+  const course = await db.course.findUnique({ where: { id: courseId } });
+  if (!course) return;
+  const enrollment = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId: session.user.id, courseId } },
+  });
+  if (!enrollment) throw new Error("Schrijf je eerst in om te beoordelen");
+
+  await db.courseReview.upsert({
+    where: { userId_courseId: { userId: session.user.id, courseId } },
+    update: { rating, body },
+    create: { userId: session.user.id, courseId, rating, body },
+  });
+  revalidatePath(`/academy/${course.slug}`);
+}
+
+export async function submitAssignment(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const assignmentId = String(formData.get("assignmentId") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
+  if (!assignmentId || !content) return;
+
+  const assignment = await db.assignment.findUnique({
+    where: { id: assignmentId },
+    include: { lesson: { include: { module: { include: { course: true } } } } },
+  });
+  if (!assignment) return;
+  await assertCourseAccess(session, assignment.lesson.module.course);
+
+  await db.assignmentSubmission.upsert({
+    where: { assignmentId_userId: { assignmentId, userId: session.user.id } },
+    update: { content, status: "submitted", submittedAt: new Date(), reviewedAt: null, grade: null, feedback: null },
+    create: { assignmentId, userId: session.user.id, content },
+  });
+  revalidatePath(`/academy/${assignment.lesson.module.course.slug}/${assignment.lessonId}`);
+}
+
 export async function addLessonComment(formData: FormData) {
   const session = await auth();
   if (!session?.user) redirect("/login");

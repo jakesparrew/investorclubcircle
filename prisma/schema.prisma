@@ -134,6 +134,7 @@ model Organization {
   events      Event[]
   eventSeries EventSeries[]
   courses     Course[]
+  learningPaths LearningPath[]
   livestreams Livestream[]
   newsletters NewsletterIssue[]
   podcast     PodcastEpisode[]
@@ -186,6 +187,8 @@ model User {
   quizAttempts   QuizAttempt[]
   certificates   Certificate[]
   lessonComments LessonComment[]
+  courseReviews  CourseReview[]
+  assignmentSubmissions AssignmentSubmission[]
 
   // Chat (Fase 3)
   conversationMemberships ConversationMember[]
@@ -248,6 +251,7 @@ model Tier {
   description         String?
   priceMonthly        Int? // cents
   priceYearly         Int? // cents
+  trialDays           Int? // free trial length in days (Stripe trial_period_days)
   currency            String   @default("eur")
   stripeProductId     String?
   stripePriceMonthlyId String?
@@ -298,6 +302,7 @@ model Product {
   active          Boolean  @default(true)
   stripeProductId String?
   images          String[]
+  courseId        String? // if set, buying this product grants access to that course (à-la-carte)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
 
@@ -903,6 +908,8 @@ model Course {
   modules      CourseModule[]
   enrollments  Enrollment[]
   certificates Certificate[]
+  reviews      CourseReview[]
+  pathLinks    LearningPathCourse[]
 
   @@index([orgId])
 }
@@ -935,6 +942,7 @@ model Lesson {
   progress LessonProgress[]
   quiz     Quiz?
   comments LessonComment[]
+  assignments Assignment[]
 
   @@index([courseModuleId])
 }
@@ -958,6 +966,7 @@ model Enrollment {
   courseId   String
   enrolledAt DateTime @default(now())
   source     String?
+  paidAccess Boolean  @default(false)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -1042,6 +1051,83 @@ model Certificate {
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model CourseReview {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int // 1..5
+  body      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model LearningPath {
+  id          String       @id @default(cuid())
+  orgId       String
+  title       String
+  slug        String       @unique
+  description String?
+  coverImage  String?
+  minTier     String?
+  status      CourseStatus @default(draft)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  org     Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  courses LearningPathCourse[]
+
+  @@index([orgId])
+}
+
+model LearningPathCourse {
+  pathId    String
+  courseId  String
+  sortOrder Int    @default(0)
+
+  path   LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([pathId, courseId])
+  @@index([courseId])
+}
+
+model Assignment {
+  id        String   @id @default(cuid())
+  lessonId  String
+  title     String
+  prompt    String
+  createdAt DateTime @default(now())
+
+  lesson      Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
+
+  @@index([lessonId])
+}
+
+model AssignmentSubmission {
+  id           String    @id @default(cuid())
+  assignmentId String
+  userId       String
+  content      String
+  status       String    @default("submitted") // submitted | approved | needs_work
+  grade        Int?
+  feedback     String?
+  submittedAt  DateTime  @default(now())
+  reviewedAt   DateTime?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
   @@index([userId])
 }
 

@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
-import { completeLesson, submitQuiz, addLessonComment } from "@/lib/academy";
+import { completeLesson, submitQuiz, addLessonComment, submitAssignment } from "@/lib/academy";
 import { normalizeVideoUrl } from "@/lib/video";
 import { renderRichText } from "@/lib/richtext";
 import { timeAgo } from "@/lib/utils";
@@ -23,6 +23,7 @@ type LessonDetail = Prisma.LessonGetPayload<{
     module: { include: { course: true } };
     quiz: { include: { questions: { include: { answers: true } } } };
     comments: { include: { author: { select: { name: true; email: true; image: true } } } };
+    assignments: { include: { submissions: true } };
   };
 }>;
 type CurriculumModule = Prisma.CourseModuleGetPayload<{ include: { lessons: true } }>;
@@ -47,6 +48,10 @@ export default async function LessonPage({
           include: { author: { select: { name: true, email: true, image: true } } },
           orderBy: { createdAt: "asc" },
           take: 100,
+        },
+        assignments: {
+          orderBy: { createdAt: "asc" },
+          include: { submissions: { where: { userId: session.user.id } } },
         },
       },
     });
@@ -272,6 +277,68 @@ export default async function LessonPage({
             <span className="flex-1" />
           )}
         </div>
+
+        {lesson.assignments.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Opdrachten
+            </h2>
+            <div className="flex flex-col gap-4">
+              {lesson.assignments.map((a) => {
+                const sub = a.submissions[0] ?? null;
+                const statusLabel =
+                  sub?.status === "approved"
+                    ? "Goedgekeurd"
+                    : sub?.status === "needs_work"
+                      ? "Aanpassing nodig"
+                      : sub
+                        ? "Ingediend — in beoordeling"
+                        : null;
+                const statusVariant =
+                  sub?.status === "approved"
+                    ? "success"
+                    : sub?.status === "needs_work"
+                      ? "warning"
+                      : "secondary";
+                return (
+                  <Card key={a.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold">{a.title}</h3>
+                        {statusLabel && <Badge variant={statusVariant}>{statusLabel}</Badge>}
+                        {sub?.grade != null && <Badge variant="secondary">{sub.grade}/100</Badge>}
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">
+                        {a.prompt}
+                      </p>
+                      {sub?.feedback && (
+                        <div className="mt-3 rounded-md border border-primary/15 bg-accent/40 p-3 text-sm">
+                          <span className="font-medium">Feedback:</span> {sub.feedback}
+                        </div>
+                      )}
+                      <form action={submitAssignment} className="mt-3 flex flex-col gap-2">
+                        <input type="hidden" name="assignmentId" value={a.id} />
+                        <textarea
+                          name="content"
+                          required
+                          rows={3}
+                          defaultValue={sub?.content ?? ""}
+                          placeholder="Schrijf of plak je antwoord…"
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                        />
+                        <div className="flex justify-end">
+                          <Button type="submit" size="sm" variant="brand">
+                            {sub ? "Opnieuw indienen" : "Indienen"}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="mt-10">
           <h2 className="mb-3 text-sm font-semibold text-muted-foreground">

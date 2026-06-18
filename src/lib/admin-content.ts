@@ -214,3 +214,85 @@ export async function addAnswer(formData: FormData) {
   });
   if (lessonId) revalidatePath(`/admin/lessons/${lessonId}/quiz`);
 }
+
+// ─── Learning paths ───────────────────────────────────────────────────────────
+
+export async function createLearningPath(formData: FormData) {
+  await requireAdmin();
+  const title = str(formData, "title");
+  if (!title) return;
+  const o = await org();
+  await db.learningPath.create({
+    data: {
+      orgId: o.id,
+      title,
+      slug: str(formData, "slug") || slugify(title),
+      description: str(formData, "description") || null,
+      coverImage: str(formData, "coverImage") || null,
+      minTier: tierOrNull(formData),
+      status: "published",
+    },
+  });
+  revalidatePath("/admin/paths");
+  revalidatePath("/academy/paths");
+}
+
+export async function addCourseToPath(formData: FormData) {
+  await requireAdmin();
+  const pathId = str(formData, "pathId");
+  const courseId = str(formData, "courseId");
+  if (!pathId || !courseId) return;
+  const count = await db.learningPathCourse.count({ where: { pathId } });
+  await db.learningPathCourse.upsert({
+    where: { pathId_courseId: { pathId, courseId } },
+    update: {},
+    create: { pathId, courseId, sortOrder: count },
+  });
+  revalidatePath("/admin/paths");
+}
+
+export async function removeCourseFromPath(formData: FormData) {
+  await requireAdmin();
+  const pathId = str(formData, "pathId");
+  const courseId = str(formData, "courseId");
+  if (!pathId || !courseId) return;
+  await db.learningPathCourse
+    .delete({ where: { pathId_courseId: { pathId, courseId } } })
+    .catch(() => null);
+  revalidatePath("/admin/paths");
+}
+
+// ─── Assignments ──────────────────────────────────────────────────────────────
+
+export async function addAssignment(formData: FormData) {
+  await requireAdmin();
+  const lessonId = str(formData, "lessonId");
+  const title = str(formData, "title");
+  const prompt = str(formData, "prompt");
+  if (!lessonId || !title || !prompt) return;
+  await db.assignment.create({ data: { lessonId, title, prompt } });
+  const lesson = await db.lesson.findUnique({
+    where: { id: lessonId },
+    include: { module: { include: { course: true } } },
+  });
+  if (lesson) revalidatePath(`/academy/${lesson.module.course.slug}/${lessonId}`);
+  revalidatePath("/admin/submissions");
+}
+
+export async function gradeSubmission(formData: FormData) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "EXPERT") {
+    throw new Error("Forbidden");
+  }
+  const id = str(formData, "submissionId");
+  const statusRaw = str(formData, "status");
+  const status = ["approved", "needs_work", "submitted"].includes(statusRaw) ? statusRaw : "submitted";
+  const grade = intOrNull(formData, "grade");
+  const feedback = str(formData, "feedback") || null;
+  if (!id) return;
+  await db.assignmentSubmission.update({
+    where: { id },
+    data: { status, grade, feedback, reviewedAt: new Date() },
+  });
+  revalidatePath("/admin/submissions");
+}

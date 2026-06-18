@@ -50,9 +50,23 @@ export default async function AcademyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Academy</h1>
-      <p className="mb-8 text-sm text-muted-foreground">
+      <p className="mb-4 text-sm text-muted-foreground">
         Cursussen met video, quizzes, voortgang en certificaten.
       </p>
+      <div className="mb-8 flex flex-wrap gap-2 text-sm">
+        <Link
+          href="/academy/paths"
+          className="rounded-full border border-border bg-card px-3 py-1.5 font-medium hover:bg-muted"
+        >
+          🛤️ Leerpaden
+        </Link>
+        <Link
+          href="/certificates"
+          className="rounded-full border border-border bg-card px-3 py-1.5 font-medium hover:bg-muted"
+        >
+          🎓 Mijn certificaten
+        </Link>
+      </div>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">

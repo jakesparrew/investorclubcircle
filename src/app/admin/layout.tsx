@@ -11,11 +11,16 @@ const NAV = [
   { href: "/admin/spaces", label: "Spaces" },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/courses", label: "Cursussen" },
+  { href: "/admin/paths", label: "Paden" },
+  { href: "/admin/submissions", label: "Opdrachten" },
   { href: "/admin/streams", label: "Streams" },
   { href: "/admin/podcast", label: "Podcast" },
   { href: "/admin/newsletter", label: "Nieuwsbrief" },
   { href: "/admin/social", label: "AI Social" },
   { href: "/admin/moderation", label: "Moderatie" },
+  { href: "/admin/coupons", label: "Coupons" },
+  { href: "/admin/segments", label: "Segmenten" },
+  { href: "/admin/revenue", label: "Omzet" },
   { href: "/admin/analytics", label: "Analytics" },
 ];
 

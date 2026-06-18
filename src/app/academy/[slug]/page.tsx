@@ -6,12 +6,24 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
-import { enrollInCourse } from "@/lib/academy";
+import { enrollInCourse, submitCourseReview } from "@/lib/academy";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+function Stars({ value, className = "" }: { value: number; className?: string }) {
+  const full = Math.max(0, Math.min(5, Math.round(value)));
+  return (
+    <span className={className} aria-label={`${value.toFixed(1)} van 5`}>
+      <span className="text-amber-500">{"★".repeat(full)}</span>
+      <span className="text-muted-foreground">{"★".repeat(5 - full)}</span>
+    </span>
+  );
+}
 
 type CourseDetail = Prisma.CourseGetPayload<{
   include: { modules: { include: { lessons: { include: { quiz: { select: { id: true } } } } } } };
@@ -80,6 +92,23 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
     }),
   ]);
 
+  const [reviewAgg, reviews] = await Promise.all([
+    db.courseReview.aggregate({
+      where: { courseId: course.id },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+    db.courseReview.findMany({
+      where: { courseId: course.id },
+      include: { user: { select: { name: true, email: true, image: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
+  const avg = reviewAgg._avg.rating ?? 0;
+  const reviewCount = reviewAgg._count._all;
+  const myReview = reviews.find((r) => r.userId === session.user.id) ?? null;
+
   const completed = new Set(progress.map((p) => p.lessonId));
   const now = new Date();
   const pct = allLessons.length ? Math.round((completed.size / allLessons.length) * 100) : 0;
@@ -90,6 +119,15 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
         ← Academy
       </Link>
       <h1 className="mt-2 text-2xl font-bold">{course.title}</h1>
+      {reviewCount > 0 && (
+        <div className="mt-1 flex items-center gap-2 text-sm">
+          <Stars value={avg} />
+          <span className="font-medium">{avg.toFixed(1)}</span>
+          <span className="text-muted-foreground">
+            ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+          </span>
+        </div>
+      )}
       {course.description && <p className="mt-1 text-muted-foreground">{course.description}</p>}
 
       <div className="mt-5 flex items-center gap-4">
@@ -155,6 +193,105 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           </div>
         ))}
       </div>
+
+      {certificate &&
+        (() => {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+          const verifyUrl = `${appUrl}/verify/${certificate.serial}`;
+          const linkedIn =
+            "https://www.linkedin.com/profile/add?" +
+            new URLSearchParams({
+              startTask: "CERTIFICATION_NAME",
+              name: course.title,
+              organizationName: "InvestorClub",
+              certUrl: verifyUrl,
+              certId: certificate.serial,
+            }).toString();
+          return (
+            <div className="mt-8 rounded-xl border border-primary/20 bg-accent/40 p-5">
+              <div className="flex items-center gap-2 font-semibold">🎓 Certificaat behaald</div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Serienummer <span className="font-mono">{certificate.serial}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/verify/${certificate.serial}`}>Bekijk &amp; verifieer</Link>
+                </Button>
+                <Button asChild size="sm" variant="brand">
+                  <a href={linkedIn} target="_blank" rel="noopener noreferrer">
+                    Voeg toe aan LinkedIn
+                  </a>
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* Reviews */}
+      <section className="mt-10">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Reviews ({reviewCount})
+        </h2>
+
+        {enrollment ? (
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <form action={submitCourseReview} className="flex flex-col gap-3">
+                <input type="hidden" name="courseId" value={course.id} />
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Jouw score</label>
+                  <select
+                    name="rating"
+                    defaultValue={myReview?.rating ?? 5}
+                    className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  >
+                    {[5, 4, 3, 2, 1].map((n) => (
+                      <option key={n} value={n}>
+                        {"★".repeat(n)} ({n})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  name="body"
+                  rows={2}
+                  defaultValue={myReview?.body ?? ""}
+                  placeholder="Wat vond je van deze cursus? (optioneel)"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                />
+                <div className="flex justify-end">
+                  <Button type="submit" size="sm" variant="brand">
+                    {myReview ? "Review bijwerken" : "Plaats review"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="mb-4 text-sm text-muted-foreground">Schrijf je in om een review achter te laten.</p>
+        )}
+
+        <div className="flex flex-col gap-3">
+          {reviews.map((r) => (
+            <div key={r.id} className="rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center gap-2">
+                <Avatar src={r.user.image} name={r.user.name ?? r.user.email} size={28} />
+                <span className="min-w-0 truncate text-sm font-medium">
+                  {r.user.name ?? r.user.email}
+                </span>
+                <Stars value={r.rating} className="text-sm" />
+                <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                  {timeAgo(r.createdAt)}
+                </span>
+              </div>
+              {r.body && <p className="mt-1.5 whitespace-pre-wrap break-words text-sm">{r.body}</p>}
+            </div>
+          ))}
+          {reviews.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nog geen reviews — wees de eerste.</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
