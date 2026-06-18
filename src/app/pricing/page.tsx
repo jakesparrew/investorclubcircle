@@ -33,15 +33,15 @@ export default async function PricingPage({
     <div className="mx-auto max-w-5xl px-4 py-16">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold">Kies je lidmaatschap</h1>
-        <p className="mt-2 text-neutral-600">Maandelijks opzegbaar. Jaarabonnement met korting.</p>
+        <p className="mt-2 text-muted-foreground">Maandelijks opzegbaar. Jaarabonnement met korting.</p>
       </div>
 
       <div className="mb-10 flex justify-center">
-        <div className="inline-flex rounded-full border border-neutral-200 bg-white p-1">
+        <div className="inline-flex rounded-full border border-border bg-card p-1">
           <Link
             href="/pricing?billing=monthly"
             className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-              !yearly ? "bg-brand font-medium text-white" : "text-neutral-600 hover:bg-neutral-50"
+              !yearly ? "bg-brand font-medium text-white" : "text-muted-foreground hover:bg-muted"
             }`}
           >
             Maandelijks
@@ -49,7 +49,7 @@ export default async function PricingPage({
           <Link
             href="/pricing?billing=yearly"
             className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-              yearly ? "bg-brand font-medium text-white" : "text-neutral-600 hover:bg-neutral-50"
+              yearly ? "bg-brand font-medium text-white" : "text-muted-foreground hover:bg-muted"
             }`}
           >
             Jaarlijks
@@ -105,7 +105,7 @@ export default async function PricingPage({
                     </div>
                   )}
                   {perks.length > 0 && (
-                    <ul className="mt-4 flex flex-col gap-1.5 text-sm text-neutral-600">
+                    <ul className="mt-4 flex flex-col gap-1.5 text-sm text-muted-foreground">
                       {perks.map((p, i) => (
                         <li key={i} className="flex gap-2">
                           <span className="text-brand">✓</span>
@@ -130,7 +130,7 @@ export default async function PricingPage({
           );
         })}
         {!dbError && tiers.length === 0 && (
-          <p className="col-span-full text-center text-sm text-neutral-500">
+          <p className="col-span-full text-center text-sm text-muted-foreground">
             Nog geen lidmaatschappen geconfigureerd. Voer de seed uit.
           </p>
         )}

@@ -85,7 +85,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         </div>
       )}
       {q.length > 0 && q.length < 2 && (
-        <p className="text-sm text-neutral-400">Typ minstens 2 tekens.</p>
+        <p className="text-sm text-muted-foreground">Typ minstens 2 tekens.</p>
       )}
     </div>
   );
@@ -95,7 +95,7 @@ function Section({ title, empty, children }: { title: string; empty: boolean; ch
   return (
     <div>
       <div className="mb-2 flex items-center gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
         {empty && <Badge variant="secondary">geen</Badge>}
       </div>
       {!empty && <div className="flex flex-col gap-1">{children}</div>}

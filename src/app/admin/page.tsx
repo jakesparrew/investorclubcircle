@@ -40,7 +40,7 @@ export default async function AdminOverviewPage() {
             <CardHeader>
               <CardTitle className="text-3xl">{c.value}</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-neutral-500">{c.label}</CardContent>
+            <CardContent className="text-sm text-muted-foreground">{c.label}</CardContent>
           </Card>
         ))}
       </div>

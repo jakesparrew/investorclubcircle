@@ -56,11 +56,11 @@ export default async function LeaderboardPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Leaderboard</h1>
-      <p className="mb-6 text-sm text-neutral-500">
+      <p className="mb-6 text-sm text-muted-foreground">
         Verdien punten door te posten, reageren en deel te nemen.
       </p>
 
-      <div className="mb-6 inline-flex rounded-full border border-neutral-200 bg-white p-1">
+      <div className="mb-6 inline-flex rounded-full border border-border bg-card p-1">
         {RANGES.map((r) => (
           <Link
             key={r.key}
@@ -68,7 +68,7 @@ export default async function LeaderboardPage({
             className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
               r.key === range.key
                 ? "bg-brand font-medium text-white"
-                : "text-neutral-600 hover:bg-neutral-50"
+                : "text-muted-foreground hover:bg-muted"
             }`}
           >
             {r.label}
@@ -93,7 +93,7 @@ export default async function LeaderboardPage({
         </div>
       )}
 
-      <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+      <div className="divide-y divide-border rounded-xl border border-border bg-card">
         {rows.map((row, i) => {
           const isMe = row.userId === meId;
           return (
@@ -102,7 +102,7 @@ export default async function LeaderboardPage({
               className={`flex items-center justify-between p-4 ${isMe ? "bg-brand/5" : ""}`}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <span className="w-6 shrink-0 text-center text-lg font-semibold text-neutral-400">
+                <span className="w-6 shrink-0 text-center text-lg font-semibold text-muted-foreground">
                   {i < 3 ? MEDALS[i] : <span className="text-sm">{i + 1}</span>}
                 </span>
                 <Avatar src={row.image} name={row.name} size={36} />
@@ -122,7 +122,7 @@ export default async function LeaderboardPage({
           );
         })}
         {rows.length === 0 && !dbError && (
-          <p className="p-6 text-center text-sm text-neutral-400">
+          <p className="p-6 text-center text-sm text-muted-foreground">
             Nog geen punten verdiend in deze periode.
           </p>
         )}

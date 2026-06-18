@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           </AppShell>
         ) : (
           <div className="flex min-h-full flex-col">
-            <header className="border-b border-neutral-200 bg-white">
+            <header className="border-b border-border bg-card">
               <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                   <span className="grid size-7 place-items-center rounded-md bg-brand text-sm text-white">
@@ -77,7 +77,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                   InvestorClub
                 </Link>
                 <nav className="flex items-center gap-4 text-sm">
-                  <Link href="/pricing" className="text-neutral-600 hover:text-neutral-900">
+                  <Link href="/pricing" className="text-muted-foreground hover:text-foreground">
                     Lidmaatschap
                   </Link>
                   <Link

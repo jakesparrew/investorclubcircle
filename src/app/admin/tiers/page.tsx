@@ -31,7 +31,7 @@ export default async function AdminTiersPage() {
       {tiers.map((tier) => (
         <div
           key={tier.id}
-          className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4"
+          className="flex items-center justify-between rounded-lg border border-border bg-card p-4"
         >
           <div>
             <div className="flex items-center gap-2">
@@ -40,7 +40,7 @@ export default async function AdminTiersPage() {
                 {tier.active ? "actief" : "inactief"}
               </Badge>
             </div>
-            <div className="text-sm text-neutral-500">
+            <div className="text-sm text-muted-foreground">
               {tier.priceMonthly != null
                 ? `${formatMoney(tier.priceMonthly, tier.currency)}/maand`
                 : "Gratis"}
@@ -56,7 +56,7 @@ export default async function AdminTiersPage() {
         </div>
       ))}
       {tiers.length === 0 && (
-        <p className="text-sm text-neutral-400">Nog geen tiers. Voer de seed uit.</p>
+        <p className="text-sm text-muted-foreground">Nog geen tiers. Voer de seed uit.</p>
       )}
     </div>
   );

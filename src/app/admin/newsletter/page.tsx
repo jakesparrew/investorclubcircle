@@ -28,7 +28,7 @@ export default async function AdminNewsletterPage() {
       <Card>
         <CardContent className="pt-6">
           <h2 className="mb-1 font-semibold">Nieuwe nieuwsbrief</h2>
-          <p className="mb-3 text-xs text-neutral-500">{optedIn} leden ingeschreven.</p>
+          <p className="mb-3 text-xs text-muted-foreground">{optedIn} leden ingeschreven.</p>
           <form action={createNewsletter} className="flex flex-col gap-3">
             <Input name="subject" placeholder="Onderwerp" required />
             <textarea
@@ -36,7 +36,7 @@ export default async function AdminNewsletterPage() {
               required
               rows={6}
               placeholder="Inhoud…"
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+              className="w-full rounded-md border border-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <div>
               <Button type="submit">Bewaar als concept</Button>
@@ -51,14 +51,14 @@ export default async function AdminNewsletterPage() {
 
       <div className="flex flex-col gap-3">
         {issues.map((issue) => (
-          <div key={issue.id} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div key={issue.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{issue.subject}</span>
                 <Badge variant={issue.status === "sent" ? "success" : "secondary"}>{issue.status}</Badge>
               </div>
               {issue.status === "sent" && (
-                <div className="text-xs text-neutral-400">Verzonden naar {issue.recipientCount ?? 0} leden</div>
+                <div className="text-xs text-muted-foreground">Verzonden naar {issue.recipientCount ?? 0} leden</div>
               )}
             </div>
             {issue.status !== "sent" && (
@@ -72,7 +72,7 @@ export default async function AdminNewsletterPage() {
           </div>
         ))}
         {issues.length === 0 && !dbError && (
-          <p className="text-sm text-neutral-400">Nog geen nieuwsbrieven.</p>
+          <p className="text-sm text-muted-foreground">Nog geen nieuwsbrieven.</p>
         )}
       </div>
     </div>

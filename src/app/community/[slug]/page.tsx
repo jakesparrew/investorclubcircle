@@ -46,7 +46,7 @@ export default async function SpacePage({
           <CardHeader>
             <CardTitle>Geen toegang</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-neutral-600">
+          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
             <p>Deze space is voorbehouden aan {space.minTier ?? "leden"}.</p>
             <Link href="/pricing">
               <Button variant="brand" className="w-full">
@@ -85,7 +85,7 @@ export default async function SpacePage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-xl font-bold break-words"># {space.name}</h1>
-      {space.description && <p className="text-sm text-neutral-500">{space.description}</p>}
+      {space.description && <p className="text-sm text-muted-foreground">{space.description}</p>}
 
       <Card className="mt-5">
         <CardContent className="pt-5">
@@ -97,15 +97,15 @@ export default async function SpacePage({
               required
               rows={3}
               placeholder="Deel iets met de community…"
-              className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             />
-            <p className="text-xs text-neutral-400">
-              Opmaak: <code className="rounded bg-neutral-100 px-1">**vet**</code>{" "}
-              <code className="rounded bg-neutral-100 px-1">*cursief*</code>{" "}
-              <code className="rounded bg-neutral-100 px-1">`code`</code> · @naam · links worden klikbaar
+            <p className="text-xs text-muted-foreground">
+              Opmaak: <code className="rounded bg-muted px-1">**vet**</code>{" "}
+              <code className="rounded bg-muted px-1">*cursief*</code>{" "}
+              <code className="rounded bg-muted px-1">`code`</code> · @naam · links worden klikbaar
             </p>
             <details className="text-sm">
-              <summary className="cursor-pointer text-neutral-500">+ Poll toevoegen (optioneel)</summary>
+              <summary className="cursor-pointer text-muted-foreground">+ Poll toevoegen (optioneel)</summary>
               <div className="mt-2 flex flex-col gap-2">
                 <Input name="pollQuestion" placeholder="Pollvraag" />
                 <Input name="pollOption1" placeholder="Optie 1" />
@@ -128,7 +128,7 @@ export default async function SpacePage({
           <PostCard key={p.id} post={p} showSpace={false} />
         ))}
         {posts.length === 0 && (
-          <p className="py-8 text-center text-sm text-neutral-400">Nog geen berichten. Wees de eerste!</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">Nog geen berichten. Wees de eerste!</p>
         )}
       </div>
 
@@ -136,7 +136,7 @@ export default async function SpacePage({
         <div className="mt-6 text-center">
           <Link
             href={`/community/${slug}?limit=${limit + PAGE}`}
-            className="inline-block rounded-full border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            className="inline-block rounded-full border border-input bg-card px-5 py-2 text-sm font-medium text-foreground hover:bg-muted"
           >
             Toon meer
           </Link>

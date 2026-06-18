@@ -64,7 +64,7 @@ export default async function MessagesPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Berichten</h1>
-      <p className="mb-6 text-sm text-neutral-500">Directe gesprekken met andere leden.</p>
+      <p className="mb-6 text-sm text-muted-foreground">Directe gesprekken met andere leden.</p>
 
       <Card className="mb-3">
         <CardContent className="pt-6">
@@ -94,7 +94,7 @@ export default async function MessagesPage() {
         </p>
       )}
 
-      <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+      <div className="divide-y divide-border rounded-xl border border-border bg-card">
         {memberships.map((m) => {
           const last = m.conversation.messages[0];
           const unread = isUnread(m);
@@ -103,7 +103,7 @@ export default async function MessagesPage() {
             <Link
               key={m.conversationId}
               href={`/messages/${m.conversationId}`}
-              className="flex items-center gap-3 p-4 hover:bg-neutral-50"
+              className="flex items-center gap-3 p-4 hover:bg-muted"
             >
               <Avatar
                 src={m.conversation.type === "group" ? null : other?.image}
@@ -112,15 +112,15 @@ export default async function MessagesPage() {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`truncate ${unread ? "font-semibold text-neutral-900" : "font-medium"}`}>
+                  <span className={`truncate ${unread ? "font-semibold text-foreground" : "font-medium"}`}>
                     {labelOf(m)}
                   </span>
                   {last && (
-                    <span className="shrink-0 text-xs text-neutral-400">{timeAgo(last.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(last.createdAt)}</span>
                   )}
                 </div>
                 <div
-                  className={`line-clamp-1 text-sm ${unread ? "font-medium text-neutral-700" : "text-neutral-500"}`}
+                  className={`line-clamp-1 text-sm ${unread ? "font-medium text-foreground" : "text-muted-foreground"}`}
                 >
                   {last?.content ?? "Nog geen berichten"}
                 </div>
@@ -130,7 +130,7 @@ export default async function MessagesPage() {
           );
         })}
         {memberships.length === 0 && !dbError && (
-          <p className="p-6 text-center text-sm text-neutral-400">
+          <p className="p-6 text-center text-sm text-muted-foreground">
             Nog geen gesprekken. Start er één hierboven.
           </p>
         )}

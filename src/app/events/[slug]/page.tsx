@@ -54,7 +54,7 @@ export default async function EventPage({
           <CardHeader>
             <CardTitle>Geen toegang</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-neutral-600">
+          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
             <p>Dit event is voorbehouden aan {event.minTier ?? "leden"}.</p>
             <Link href="/pricing">
               <Button variant="brand" className="w-full">
@@ -106,12 +106,12 @@ export default async function EventPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <Link href="/events" className="text-sm text-neutral-500 hover:text-neutral-900">
+      <Link href="/events" className="text-sm text-muted-foreground hover:text-foreground">
         ← Events
       </Link>
 
       {event.coverImage && (
-        <div className="mt-3 aspect-[3/1] w-full overflow-hidden rounded-2xl bg-neutral-100">
+        <div className="mt-3 aspect-[3/1] w-full overflow-hidden rounded-2xl bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={event.coverImage} alt="" className="h-full w-full object-cover" />
         </div>
@@ -125,7 +125,7 @@ export default async function EventPage({
             {recurring && <Badge variant="secondary">Terugkerend</Badge>}
             {isPast && <Badge variant="secondary">Afgelopen</Badge>}
           </div>
-          <div className="mt-2 flex items-center gap-2 text-sm text-neutral-500">
+          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <Avatar src={event.host.image} name={event.host.name ?? event.host.email} size={24} />
             Gehost door {event.host.name ?? event.host.email}
           </div>
@@ -136,11 +136,11 @@ export default async function EventPage({
             </p>
           )}
 
-          <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-neutral-400">Details</h2>
+          <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Details</h2>
           {event.description && (
-            <p className="mt-2 whitespace-pre-wrap text-neutral-700">{event.description}</p>
+            <p className="mt-2 whitespace-pre-wrap text-foreground">{event.description}</p>
           )}
-          <ul className="mt-4 flex flex-col gap-1 text-sm text-neutral-600">
+          <ul className="mt-4 flex flex-col gap-1 text-sm text-muted-foreground">
             <li className="capitalize">📅 {fullDate} · {timeRange}</li>
             {event.location && <li>📍 {event.location}</li>}
             <li>
@@ -154,12 +154,12 @@ export default async function EventPage({
 
           {isPast && event.recordingUrl && (
             <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">Opname</h2>
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Opname</h2>
               <a
                 href={event.recordingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted"
               >
                 ▶ Bekijk de opname
               </a>
@@ -168,7 +168,7 @@ export default async function EventPage({
 
           {attendees.length > 0 && (
             <div className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Deelnemers ({confirmedCount})
               </h2>
               <div className="flex items-center">
@@ -184,7 +184,7 @@ export default async function EventPage({
                   ))}
                 </div>
                 {confirmedCount > attendees.length && (
-                  <span className="ml-3 text-sm text-neutral-500">
+                  <span className="ml-3 text-sm text-muted-foreground">
                     +{confirmedCount - attendees.length} meer
                   </span>
                 )}
@@ -198,18 +198,18 @@ export default async function EventPage({
           <Card>
             <CardContent className="flex flex-col gap-4 pt-6">
               <div className="flex items-center gap-3">
-                <div className="flex size-14 flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white">
-                  <span className="text-xs uppercase text-neutral-400">{month}</span>
+                <div className="flex size-14 flex-col items-center justify-center rounded-xl border border-border bg-card">
+                  <span className="text-xs uppercase text-muted-foreground">{month}</span>
                   <span className="text-xl font-bold leading-none">{day}</span>
                 </div>
                 <div className="text-sm">
                   <div className="font-medium capitalize">{fullDate}</div>
-                  <div className="text-neutral-500">{timeRange}</div>
+                  <div className="text-muted-foreground">{timeRange}</div>
                 </div>
               </div>
 
               {spotsLeft != null && (
-                <div className="text-sm text-neutral-500">
+                <div className="text-sm text-muted-foreground">
                   {spotsLeft} van {event.capacity} plaatsen vrij
                 </div>
               )}
@@ -230,14 +230,14 @@ export default async function EventPage({
               )}
 
               {!isPast && (
-                <div className="flex flex-col gap-2 border-t border-neutral-100 pt-4">
-                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                <div className="flex flex-col gap-2 border-t border-border pt-4">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Toevoegen aan agenda
                   </div>
                   <div className="flex gap-2">
                     <a
                       href={`/events/${slug}/ics`}
-                      className="flex-1 rounded-md border border-neutral-200 px-3 py-1.5 text-center text-sm hover:bg-neutral-50"
+                      className="flex-1 rounded-md border border-border px-3 py-1.5 text-center text-sm hover:bg-muted"
                     >
                       Apple / iCal
                     </a>
@@ -245,7 +245,7 @@ export default async function EventPage({
                       href={googleCalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 rounded-md border border-neutral-200 px-3 py-1.5 text-center text-sm hover:bg-neutral-50"
+                      className="flex-1 rounded-md border border-border px-3 py-1.5 text-center text-sm hover:bg-muted"
                     >
                       Google
                     </a>

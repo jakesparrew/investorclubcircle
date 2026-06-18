@@ -43,7 +43,7 @@ export default async function ProfileEditPage() {
             {image ? (
               <img src={image} alt="" className="h-12 w-12 rounded-full object-cover" />
             ) : (
-              <div className="h-12 w-12 rounded-full bg-neutral-200" />
+              <div className="h-12 w-12 rounded-full bg-muted" />
             )}
             <input type="file" name="avatar" accept="image/*" className="text-sm" />
             <Button type="submit" size="sm" variant="outline">
@@ -58,7 +58,7 @@ export default async function ProfileEditPage() {
               placeholder="Bio"
               rows={4}
               defaultValue={bio}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              className="rounded-md border border-input px-3 py-2 text-sm"
             />
             <Input name="expertise" placeholder="Expertise (komma-gescheiden)" defaultValue={expertise} />
             <Button type="submit">Opslaan</Button>

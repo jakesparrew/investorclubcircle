@@ -50,7 +50,7 @@ export default async function AcademyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Academy</h1>
-      <p className="mb-8 text-sm text-neutral-500">
+      <p className="mb-8 text-sm text-muted-foreground">
         Cursussen met video, quizzes, voortgang en certificaten.
       </p>
 
@@ -68,7 +68,7 @@ export default async function AcademyPage() {
             <Link
               key={course.id}
               href={href}
-              className="group flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors hover:border-neutral-300"
+              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-input"
             >
               <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-brand/15 to-brand/5">
                 {course.coverImage ? (
@@ -98,18 +98,18 @@ export default async function AcademyPage() {
               <div className="flex flex-1 flex-col p-5">
                 <h3 className="font-semibold break-words">{course.title}</h3>
                 {course.description && (
-                  <p className="mt-1 line-clamp-2 flex-1 text-sm text-neutral-600">{course.description}</p>
+                  <p className="mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">{course.description}</p>
                 )}
 
                 {enrolled && total > 0 && (
                   <div className="mt-3">
-                    <div className="mb-1 flex justify-between text-xs text-neutral-500">
+                    <div className="mb-1 flex justify-between text-xs text-muted-foreground">
                       <span>Voortgang</span>
                       <span>
                         {completed}/{total}
                       </span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export default async function AcademyPage() {
           );
         })}
         {rows.length === 0 && !dbError && (
-          <p className="col-span-full text-center text-sm text-neutral-400">Nog geen cursussen.</p>
+          <p className="col-span-full text-center text-sm text-muted-foreground">Nog geen cursussen.</p>
         )}
       </div>
     </div>

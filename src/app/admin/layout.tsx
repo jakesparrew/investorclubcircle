@@ -27,13 +27,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="mb-1 text-2xl font-bold">Admin</h1>
-      <p className="mb-6 text-sm text-neutral-500">Beheer leden, tiers en configuratie.</p>
-      <nav className="mb-8 flex gap-4 overflow-x-auto whitespace-nowrap border-b border-neutral-200 pb-3 text-sm">
+      <p className="mb-6 text-sm text-muted-foreground">Beheer leden, tiers en configuratie.</p>
+      <nav className="mb-8 flex gap-4 overflow-x-auto whitespace-nowrap border-b border-border pb-3 text-sm">
         {NAV.map((n) => (
           <Link
             key={n.href}
             href={n.href}
-            className="shrink-0 text-neutral-600 hover:text-neutral-900"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
           >
             {n.label}
           </Link>

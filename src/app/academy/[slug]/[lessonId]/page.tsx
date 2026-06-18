@@ -100,19 +100,19 @@ export default async function LessonPage({
 
   const curriculum = (onlyNav = false) => (
     <nav className={onlyNav ? "" : "lg:sticky lg:top-[4.5rem]"}>
-      <div className="mb-2 flex items-center justify-between text-xs text-neutral-500">
+      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
         <span className="font-semibold uppercase tracking-wide">Inhoud</span>
         <span>
           {totalDone}/{flat.length}
         </span>
       </div>
-      <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+      <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
       </div>
       <div className="flex flex-col gap-4">
         {modules.map((m) => (
           <div key={m.id}>
-            <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {m.title}
             </div>
             <div className="flex flex-col">
@@ -122,7 +122,7 @@ export default async function LessonPage({
                 const available = isAvail(l);
                 const inner = (
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-neutral-400">
+                    <span className="shrink-0 text-muted-foreground">
                       {done ? "✓" : available ? "○" : <Lock className="size-3" />}
                     </span>
                     <span className="min-w-0 flex-1 truncate">{l.title}</span>
@@ -134,13 +134,13 @@ export default async function LessonPage({
                     href={`/academy/${slug}/${l.id}`}
                     aria-current={here ? "page" : undefined}
                     className={`rounded-md px-2 py-1.5 text-sm ${
-                      here ? "bg-brand/10 font-medium text-brand" : "text-neutral-700 hover:bg-neutral-100"
+                      here ? "bg-brand/10 font-medium text-brand" : "text-foreground hover:bg-muted"
                     }`}
                   >
                     {inner}
                   </Link>
                 ) : (
-                  <span key={l.id} className="rounded-md px-2 py-1.5 text-sm text-neutral-400">
+                  <span key={l.id} className="rounded-md px-2 py-1.5 text-sm text-muted-foreground">
                     {inner}
                   </span>
                 );
@@ -155,13 +155,13 @@ export default async function LessonPage({
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 lg:flex lg:gap-8">
       <div className="min-w-0 flex-1">
-        <Link href={`/academy/${slug}`} className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href={`/academy/${slug}`} className="text-sm text-muted-foreground hover:text-foreground">
           ← {course.title}
         </Link>
 
         {/* Mobile curriculum */}
-        <details className="mt-3 rounded-lg border border-neutral-200 bg-white p-3 lg:hidden">
-          <summary className="cursor-pointer text-sm font-medium text-neutral-700">
+        <details className="mt-3 rounded-lg border border-border bg-card p-3 lg:hidden">
+          <summary className="cursor-pointer text-sm font-medium text-foreground">
             Cursusinhoud · {totalDone}/{flat.length}
           </summary>
           <div className="mt-3">{curriculum(true)}</div>
@@ -173,7 +173,7 @@ export default async function LessonPage({
         </div>
 
         {video && (
-          <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-neutral-200 bg-black">
+          <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
             {video.kind === "file" ? (
               // eslint-disable-next-line jsx-a11y/media-has-caption
               <video src={video.src} controls className="h-full w-full" />
@@ -188,7 +188,7 @@ export default async function LessonPage({
           </div>
         )}
 
-        <article className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-neutral-800">
+        <article className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
           {renderRichText(lesson.content)}
         </article>
 
@@ -196,7 +196,7 @@ export default async function LessonPage({
           <Card className="mt-8">
             <CardContent className="pt-6">
               <h2 className="mb-1 font-semibold">{lesson.quiz.title}</h2>
-              <p className="mb-4 text-xs text-neutral-500">
+              <p className="mb-4 text-xs text-muted-foreground">
                 Slaagdrempel: {lesson.quiz.passPercent}%
                 {lastAttempt &&
                   ` · laatste poging: ${lastAttempt.score}% (${lastAttempt.passed ? "geslaagd" : "niet geslaagd"})`}
@@ -218,7 +218,7 @@ export default async function LessonPage({
                       </label>
                     ))}
                     {q.type === "multiple" && (
-                      <span className="text-xs text-neutral-400">Meerdere antwoorden mogelijk</span>
+                      <span className="text-xs text-muted-foreground">Meerdere antwoorden mogelijk</span>
                     )}
                   </fieldset>
                 ))}
@@ -242,15 +242,15 @@ export default async function LessonPage({
         )}
 
         {/* Prev / next */}
-        <div className="mt-10 flex items-stretch justify-between gap-3 border-t border-neutral-200 pt-5">
+        <div className="mt-10 flex items-stretch justify-between gap-3 border-t border-border pt-5">
           {prev && isAvail(prev) ? (
             <Link
               href={`/academy/${slug}/${prev.id}`}
-              className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-neutral-200 p-3 text-left hover:bg-neutral-50"
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border p-3 text-left hover:bg-muted"
             >
-              <ChevronLeft className="size-4 shrink-0 text-neutral-400" />
+              <ChevronLeft className="size-4 shrink-0 text-muted-foreground" />
               <span className="min-w-0">
-                <span className="block text-xs text-neutral-400">Vorige</span>
+                <span className="block text-xs text-muted-foreground">Vorige</span>
                 <span className="block truncate text-sm font-medium">{prev.title}</span>
               </span>
             </Link>
@@ -260,13 +260,13 @@ export default async function LessonPage({
           {next && isAvail(next) ? (
             <Link
               href={`/academy/${slug}/${next.id}`}
-              className="flex min-w-0 flex-1 items-center justify-end gap-2 rounded-lg border border-neutral-200 p-3 text-right hover:bg-neutral-50"
+              className="flex min-w-0 flex-1 items-center justify-end gap-2 rounded-lg border border-border p-3 text-right hover:bg-muted"
             >
               <span className="min-w-0">
-                <span className="block text-xs text-neutral-400">Volgende</span>
+                <span className="block text-xs text-muted-foreground">Volgende</span>
                 <span className="block truncate text-sm font-medium">{next.title}</span>
               </span>
-              <ChevronRight className="size-4 shrink-0 text-neutral-400" />
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
             </Link>
           ) : (
             <span className="flex-1" />
@@ -274,7 +274,7 @@ export default async function LessonPage({
         </div>
 
         <section className="mt-10">
-          <h2 className="mb-3 text-sm font-semibold text-neutral-500">
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
             Discussie ({lesson.comments.length})
           </h2>
           <form action={addLessonComment} className="mb-4 flex gap-2">
@@ -283,7 +283,7 @@ export default async function LessonPage({
               name="content"
               required
               placeholder="Stel een vraag of deel iets…"
-              className="min-w-0 flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+              className="min-w-0 flex-1 rounded-md border border-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             />
             <Button type="submit" size="sm" className="shrink-0">
               Plaats
@@ -291,15 +291,15 @@ export default async function LessonPage({
           </form>
           <div className="flex flex-col gap-3">
             {lesson.comments.map((c) => (
-              <div key={c.id} className="rounded-lg border border-neutral-200 bg-white p-4">
+              <div key={c.id} className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center gap-2">
                   <Avatar src={c.author.image} name={c.author.name ?? c.author.email} size={24} />
-                  <span className="min-w-0 truncate text-xs font-medium text-neutral-700">
+                  <span className="min-w-0 truncate text-xs font-medium text-foreground">
                     {c.author.name ?? c.author.email}
                   </span>
-                  <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(c.createdAt)}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">· {timeAgo(c.createdAt)}</span>
                 </div>
-                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-foreground">
                   {c.content}
                 </p>
               </div>

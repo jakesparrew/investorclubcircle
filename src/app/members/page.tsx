@@ -55,16 +55,16 @@ export default async function MembersPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Leden</h1>
-      <p className="mb-6 text-sm text-neutral-500">De community van InvestorClub.</p>
+      <p className="mb-6 text-sm text-muted-foreground">De community van InvestorClub.</p>
 
       <form method="GET" className="mb-8 flex gap-2">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             name="q"
             defaultValue={q}
             placeholder="Zoek op naam, e-mail of functie…"
-            className="w-full rounded-md border border-neutral-300 bg-white py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+            className="w-full rounded-md border border-input bg-card py-2 pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
           />
         </div>
         <Button type="submit" variant="brand" className="shrink-0">
@@ -79,7 +79,7 @@ export default async function MembersPage({
       )}
 
       {q && (
-        <p className="mb-4 text-sm text-neutral-500">
+        <p className="mb-4 text-sm text-muted-foreground">
           {members.length === 0 ? "Geen leden gevonden voor" : "Resultaten voor"} “{q}” ·{" "}
           <Link href="/members" className="underline">
             wis
@@ -91,7 +91,7 @@ export default async function MembersPage({
         {members.map((m) => (
           <div
             key={m.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4"
+            className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
           >
             <div className="flex min-w-0 items-center gap-3">
               <Avatar src={m.image} name={m.name} size={36} />
@@ -100,7 +100,7 @@ export default async function MembersPage({
                   {m.name ?? "Lid"}
                 </Link>
                 {m.profile?.headline && (
-                  <div className="truncate text-sm text-neutral-500">{m.profile.headline}</div>
+                  <div className="truncate text-sm text-muted-foreground">{m.profile.headline}</div>
                 )}
               </div>
             </div>
@@ -115,7 +115,7 @@ export default async function MembersPage({
           </div>
         ))}
         {members.length === 0 && !dbError && !q && (
-          <p className="col-span-full text-center text-sm text-neutral-400">Nog geen leden.</p>
+          <p className="col-span-full text-center text-sm text-muted-foreground">Nog geen leden.</p>
         )}
       </div>
 
@@ -123,7 +123,7 @@ export default async function MembersPage({
         <div className="mt-6 text-center">
           <Link
             href={`/members?${new URLSearchParams({ ...(q ? { q } : {}), limit: `${limit + PAGE}` })}`}
-            className="inline-block rounded-full border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            className="inline-block rounded-full border border-input bg-card px-5 py-2 text-sm font-medium text-foreground hover:bg-muted"
           >
             Toon meer
           </Link>

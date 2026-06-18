@@ -31,17 +31,17 @@ export default async function AdminEventsPage() {
             <Input name="coverImage" placeholder="Cover-afbeelding URL (optioneel)" className="sm:col-span-2" />
             <Input name="location" placeholder="Locatie" />
             <div className="grid grid-cols-2 gap-2">
-              <label className="flex flex-col gap-1 text-xs text-neutral-500">
+              <label className="flex flex-col gap-1 text-xs text-muted-foreground">
                 Start
                 <Input name="startsAt" type="datetime-local" />
               </label>
-              <label className="flex flex-col gap-1 text-xs text-neutral-500">
+              <label className="flex flex-col gap-1 text-xs text-muted-foreground">
                 Einde
                 <Input name="endsAt" type="datetime-local" />
               </label>
             </div>
             <Input name="capacity" type="number" placeholder="Capaciteit" />
-            <select name="minTier" className="h-10 rounded-md border border-neutral-300 px-2 text-sm">
+            <select name="minTier" className="h-10 rounded-md border border-input px-2 text-sm">
               <option value="">Min. tier: free</option>
               <option value="basis">basis</option>
               <option value="premium">premium</option>
@@ -53,7 +53,7 @@ export default async function AdminEventsPage() {
               name="description"
               placeholder="Beschrijving"
               rows={2}
-              className="rounded-md border border-neutral-300 px-3 py-2 text-sm sm:col-span-2"
+              className="rounded-md border border-input px-3 py-2 text-sm sm:col-span-2"
             />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="isPublic" /> Publiek
@@ -71,12 +71,12 @@ export default async function AdminEventsPage() {
 
       <div className="flex flex-col gap-2">
         {events.map((e) => (
-          <div key={e.id} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div key={e.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
             <div>
               <Link href={`/events/${e.slug}`} className="font-medium hover:underline">
                 {e.title}
               </Link>
-              <div className="text-xs text-neutral-400">
+              <div className="text-xs text-muted-foreground">
                 {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(e.startsAt)}
                 {e.depositAmount ? ` · waarborg ${formatMoney(e.depositAmount)}` : ""}
               </div>
@@ -84,7 +84,7 @@ export default async function AdminEventsPage() {
             <Badge variant="secondary">{e.status}</Badge>
           </div>
         ))}
-        {events.length === 0 && !dbError && <p className="text-sm text-neutral-400">Nog geen events.</p>}
+        {events.length === 0 && !dbError && <p className="text-sm text-muted-foreground">Nog geen events.</p>}
       </div>
     </div>
   );

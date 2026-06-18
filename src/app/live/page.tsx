@@ -34,7 +34,7 @@ export default async function LivePage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Live & opnames</h1>
-      <p className="mb-8 text-sm text-neutral-500">Volg sessies live of bekijk de opname.</p>
+      <p className="mb-8 text-sm text-muted-foreground">Volg sessies live of bekijk de opname.</p>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
@@ -44,13 +44,13 @@ export default async function LivePage() {
 
       <div className="flex flex-col gap-3">
         {rows.map(({ stream, accessible }) => (
-          <div key={stream.id} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-5">
+          <div key={stream.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-5">
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{stream.title}</span>
                 {statusBadge(stream.status)}
               </div>
-              {stream.description && <p className="text-sm text-neutral-500">{stream.description}</p>}
+              {stream.description && <p className="text-sm text-muted-foreground">{stream.description}</p>}
             </div>
             {accessible ? (
               <Link href={`/live/${stream.id}`}>
@@ -64,7 +64,7 @@ export default async function LivePage() {
           </div>
         ))}
         {rows.length === 0 && !dbError && (
-          <p className="text-center text-sm text-neutral-400">Nog geen streams gepland.</p>
+          <p className="text-center text-sm text-muted-foreground">Nog geen streams gepland.</p>
         )}
       </div>
     </div>

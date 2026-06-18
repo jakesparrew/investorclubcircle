@@ -64,7 +64,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={user.image} alt="" className="size-8 rounded-full object-cover" />
         ) : (
-          <span className="grid size-8 place-items-center rounded-full bg-neutral-200 text-sm font-medium">
+          <span className="grid size-8 place-items-center rounded-full bg-muted text-sm font-medium">
             {initials}
           </span>
         )}
@@ -73,11 +73,11 @@ export function UserMenu({ user }: { user: MenuUser }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white py-1 shadow-lg"
+          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg"
         >
-          <div className="border-b border-neutral-100 px-3 py-2">
-            <div className="truncate text-sm font-medium text-neutral-900">{user.name ?? "Lid"}</div>
-            <div className="truncate text-xs text-neutral-400">{user.role}</div>
+          <div className="border-b border-border px-3 py-2">
+            <div className="truncate text-sm font-medium text-foreground">{user.name ?? "Lid"}</div>
+            <div className="truncate text-xs text-muted-foreground">{user.role}</div>
           </div>
           {items.map(({ href, label, Icon }) => (
             <Link
@@ -85,9 +85,9 @@ export function UserMenu({ user }: { user: MenuUser }) {
               href={href}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted"
             >
-              <Icon className="size-4 shrink-0 text-neutral-400" />
+              <Icon className="size-4 shrink-0 text-muted-foreground" />
               <span className="min-w-0 truncate">{label}</span>
             </Link>
           ))}
@@ -96,21 +96,21 @@ export function UserMenu({ user }: { user: MenuUser }) {
               href="/admin"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50"
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted"
             >
-              <Settings className="size-4 shrink-0 text-neutral-400" />
+              <Settings className="size-4 shrink-0 text-muted-foreground" />
               <span className="min-w-0 truncate">Adminpaneel</span>
             </Link>
           )}
           <button
             role="menuitem"
             onClick={toggleTheme}
-            className="flex w-full items-center gap-2.5 border-t border-neutral-100 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+            className="flex w-full items-center gap-2.5 border-t border-border px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
           >
             {dark ? (
-              <Sun className="size-4 shrink-0 text-neutral-400" />
+              <Sun className="size-4 shrink-0 text-muted-foreground" />
             ) : (
-              <Moon className="size-4 shrink-0 text-neutral-400" />
+              <Moon className="size-4 shrink-0 text-muted-foreground" />
             )}
             {dark ? "Licht thema" : "Donker thema"}
           </button>
@@ -120,9 +120,9 @@ export function UserMenu({ user }: { user: MenuUser }) {
               setOpen(false);
               void signOut({ callbackUrl: "/" });
             }}
-            className="flex w-full items-center gap-2.5 border-t border-neutral-100 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50"
+            className="flex w-full items-center gap-2.5 border-t border-border px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
           >
-            <LogOut className="size-4 shrink-0 text-neutral-400" />
+            <LogOut className="size-4 shrink-0 text-muted-foreground" />
             Uitloggen
           </button>
         </div>

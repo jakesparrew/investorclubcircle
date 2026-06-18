@@ -37,7 +37,7 @@ export default async function AdminMembersPage() {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500">
+          <tr className="border-b border-border text-left text-muted-foreground">
             <th className="py-2 pr-4 font-medium">E-mail</th>
             <th className="py-2 pr-4 font-medium">Lidmaatschap</th>
             <th className="py-2 pr-4 font-medium">Rol wijzigen</th>
@@ -47,10 +47,10 @@ export default async function AdminMembersPage() {
           {users.map((u) => {
             const membership = u.memberships[0];
             return (
-              <tr key={u.id} className="border-b border-neutral-100">
+              <tr key={u.id} className="border-b border-border">
                 <td className="py-3 pr-4">
                   <div className="font-medium">{u.email}</div>
-                  {u.name && <div className="text-neutral-400">{u.name}</div>}
+                  {u.name && <div className="text-muted-foreground">{u.name}</div>}
                 </td>
                 <td className="py-3 pr-4">
                   {membership ? (
@@ -58,7 +58,7 @@ export default async function AdminMembersPage() {
                       {membership.tier.key} · {membership.status}
                     </Badge>
                   ) : (
-                    <span className="text-neutral-400">—</span>
+                    <span className="text-muted-foreground">—</span>
                   )}
                 </td>
                 <td className="py-3 pr-4">
@@ -67,7 +67,7 @@ export default async function AdminMembersPage() {
                     <select
                       name="role"
                       defaultValue={u.role}
-                      className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
+                      className="h-9 rounded-md border border-input bg-card px-2 text-sm"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -85,7 +85,7 @@ export default async function AdminMembersPage() {
           })}
           {users.length === 0 && (
             <tr>
-              <td colSpan={3} className="py-6 text-center text-neutral-400">
+              <td colSpan={3} className="py-6 text-center text-muted-foreground">
                 Nog geen gebruikers.
               </td>
             </tr>

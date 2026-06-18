@@ -38,15 +38,15 @@ export default async function AdminPodcastPage() {
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">Database nog niet gekoppeld.</p>
       )}
 
-      <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+      <div className="divide-y divide-border rounded-lg border border-border bg-card">
         {episodes.map((e) => (
           <div key={e.id} className="p-4 text-sm">
             <div className="font-medium">{e.title}</div>
-            <div className="text-xs text-neutral-400">{e.audioUrl}</div>
+            <div className="text-xs text-muted-foreground">{e.audioUrl}</div>
           </div>
         ))}
         {episodes.length === 0 && !dbError && (
-          <p className="p-4 text-sm text-neutral-400">Nog geen afleveringen.</p>
+          <p className="p-4 text-sm text-muted-foreground">Nog geen afleveringen.</p>
         )}
       </div>
     </div>

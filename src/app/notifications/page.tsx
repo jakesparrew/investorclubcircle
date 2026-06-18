@@ -54,16 +54,16 @@ export default async function NotificationsPage() {
         </p>
       )}
 
-      <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+      <div className="divide-y divide-border rounded-xl border border-border bg-card">
         {notifs.map((n) => {
           const m = message(n);
           const body = (
-            <div className={`p-4 text-sm ${n.readAt ? "text-neutral-500" : "font-medium text-neutral-900"}`}>
+            <div className={`p-4 text-sm ${n.readAt ? "text-muted-foreground" : "font-medium text-foreground"}`}>
               {m.text}
             </div>
           );
           return m.link ? (
-            <Link key={n.id} href={m.link} className="block hover:bg-neutral-50">
+            <Link key={n.id} href={m.link} className="block hover:bg-muted">
               {body}
             </Link>
           ) : (
@@ -71,7 +71,7 @@ export default async function NotificationsPage() {
           );
         })}
         {notifs.length === 0 && !dbError && (
-          <p className="p-6 text-center text-sm text-neutral-400">Nog geen meldingen.</p>
+          <p className="p-6 text-center text-sm text-muted-foreground">Nog geen meldingen.</p>
         )}
       </div>
     </div>

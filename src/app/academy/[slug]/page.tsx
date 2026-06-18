@@ -55,7 +55,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
           <CardHeader>
             <CardTitle>Geen toegang</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-neutral-600">
+          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
             <p>Deze cursus is voorbehouden aan {course.minTier ?? "leden"}.</p>
             <Link href="/pricing">
               <Button className="w-full">Bekijk lidmaatschappen</Button>
@@ -86,22 +86,22 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link href="/academy" className="text-sm text-neutral-500 hover:text-neutral-900">
+      <Link href="/academy" className="text-sm text-muted-foreground hover:text-foreground">
         ← Academy
       </Link>
       <h1 className="mt-2 text-2xl font-bold">{course.title}</h1>
-      {course.description && <p className="mt-1 text-neutral-600">{course.description}</p>}
+      {course.description && <p className="mt-1 text-muted-foreground">{course.description}</p>}
 
       <div className="mt-5 flex items-center gap-4">
         {enrollment ? (
           <div className="flex-1">
-            <div className="mb-1 flex justify-between text-xs text-neutral-500">
+            <div className="mb-1 flex justify-between text-xs text-muted-foreground">
               <span>Voortgang</span>
               <span>
                 {completed.size}/{allLessons.length}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
             </div>
           </div>
@@ -119,10 +119,10 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
       <div className="mt-8 flex flex-col gap-6">
         {course.modules.map((module) => (
           <div key={module.id}>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {module.title}
             </h2>
-            <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
               {module.lessons.map((lesson) => {
                 const isDone = completed.has(lesson.id);
                 const available = isLessonAvailable(lesson, enrollment?.enrolledAt ?? null, completed, now);
@@ -130,19 +130,19 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
                   <Link
                     key={lesson.id}
                     href={`/academy/${slug}/${lesson.id}`}
-                    className="flex items-center justify-between p-4 hover:bg-neutral-50"
+                    className="flex items-center justify-between p-4 hover:bg-muted"
                   >
                     <span className="flex items-center gap-2">
                       {isDone ? "✓" : "○"} {lesson.title}
                       {lesson.isPreview && <Badge variant="secondary">Preview</Badge>}
                       {lesson.quiz && <Badge variant="secondary">Quiz</Badge>}
                     </span>
-                    <span className="text-neutral-400">→</span>
+                    <span className="text-muted-foreground">→</span>
                   </Link>
                 ) : (
                   <div
                     key={lesson.id}
-                    className="flex items-center justify-between p-4 text-neutral-400"
+                    className="flex items-center justify-between p-4 text-muted-foreground"
                   >
                     <span className="flex items-center gap-2">🔒 {lesson.title}</span>
                     <span className="text-xs">

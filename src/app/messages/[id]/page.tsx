@@ -71,14 +71,14 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       <ChatAutoRefresh />
 
       <div className="shrink-0">
-        <Link href="/messages" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/messages" className="text-sm text-muted-foreground hover:text-foreground">
           ← Berichten
         </Link>
         <h1 className="mt-1 truncate text-xl font-bold">{title}</h1>
 
         {conversation.type === "group" && (
-          <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-3 text-sm">
-            <div className="mb-2 truncate text-neutral-500">
+          <div className="mt-2 rounded-lg border border-border bg-card p-3 text-sm">
+            <div className="mb-2 truncate text-muted-foreground">
               {conversation.members.map((m) => m.user.name ?? m.user.email).join(", ")}
             </div>
             <form action={addGroupMember} className="flex gap-2">
@@ -88,7 +88,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
                 type="email"
                 required
                 placeholder="Lid toevoegen (e-mail)…"
-                className="min-w-0 flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                className="min-w-0 flex-1 rounded-md border border-input px-2 py-1 text-sm"
               />
               <Button type="submit" size="sm" variant="outline" className="shrink-0">
                 +
@@ -100,7 +100,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
 
       <ChatScroll
         dep={lastId}
-        className="mt-3 flex-1 space-y-2 overflow-y-auto rounded-xl border border-neutral-200 bg-neutral-50 p-4"
+        className="mt-3 flex-1 space-y-2 overflow-y-auto rounded-xl border border-border bg-muted p-4"
       >
         {ordered.map((msg, i) => {
           const mine = msg.sender.id === me;
@@ -117,17 +117,17 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
               )}
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                  mine ? "bg-brand text-white" : "bg-white text-neutral-900 ring-1 ring-neutral-200"
+                  mine ? "bg-brand text-white" : "bg-card text-foreground ring-1 ring-border"
                 }`}
               >
                 {!mine && showMeta && (
-                  <div className="mb-0.5 text-xs font-medium text-neutral-500">
+                  <div className="mb-0.5 text-xs font-medium text-muted-foreground">
                     {msg.sender.name ?? msg.sender.email}
                   </div>
                 )}
                 <span className="whitespace-pre-wrap break-words">{msg.content}</span>
                 <span
-                  className={`mt-0.5 block text-right text-[10px] ${mine ? "text-white/70" : "text-neutral-400"}`}
+                  className={`mt-0.5 block text-right text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}
                 >
                   {timeAgo(msg.createdAt)}
                 </span>
@@ -136,7 +136,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
           );
         })}
         {ordered.length === 0 && (
-          <p className="py-8 text-center text-sm text-neutral-400">Nog geen berichten.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">Nog geen berichten.</p>
         )}
       </ChatScroll>
 
@@ -147,7 +147,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
           required
           autoComplete="off"
           placeholder="Typ een bericht…"
-          className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          className="min-w-0 flex-1 rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
         />
         <Button type="submit" variant="brand" className="shrink-0">
           Stuur

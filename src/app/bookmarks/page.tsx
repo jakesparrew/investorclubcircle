@@ -36,7 +36,7 @@ export default async function BookmarksPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Bewaarde posts</h1>
-      <p className="mb-8 text-sm text-neutral-500">Posts die je bewaarde voor later.</p>
+      <p className="mb-8 text-sm text-muted-foreground">Posts die je bewaarde voor later.</p>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
@@ -49,14 +49,14 @@ export default async function BookmarksPage() {
           <Link
             key={post.id}
             href={`/community/${post.space.slug}/${post.id}`}
-            className="rounded-xl border border-neutral-200 bg-white p-4 hover:bg-neutral-50"
+            className="rounded-xl border border-border bg-card p-4 hover:bg-muted"
           >
             {post.title && <div className="font-medium">{post.title}</div>}
-            <p className="line-clamp-2 text-sm text-neutral-600">{post.content}</p>
+            <p className="line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
           </Link>
         ))}
         {posts.length === 0 && !dbError && (
-          <p className="text-center text-sm text-neutral-400">Nog niets bewaard.</p>
+          <p className="text-center text-sm text-muted-foreground">Nog niets bewaard.</p>
         )}
       </div>
     </div>

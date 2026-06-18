@@ -132,25 +132,25 @@ export default async function PostPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link href={`/community/${slug}`} className="text-sm text-neutral-500 hover:text-neutral-900">
+      <Link href={`/community/${slug}`} className="text-sm text-muted-foreground hover:text-foreground">
         ← {post.space.name}
       </Link>
 
-      <article className="mt-3 rounded-xl border border-neutral-200 bg-white p-6">
+      <article className="mt-3 rounded-xl border border-border bg-card p-6">
         {post.title && <h1 className="text-xl font-bold break-words">{post.title}</h1>}
         <div className="mt-1.5 flex items-center gap-2">
           <Avatar src={post.author.image} name={post.author.name ?? post.author.email} size={28} />
-          <span className="min-w-0 truncate text-sm font-medium text-neutral-700">
+          <span className="min-w-0 truncate text-sm font-medium text-foreground">
             {post.author.name ?? post.author.email}
           </span>
-          <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(post.createdAt)}</span>
+          <span className="shrink-0 text-xs text-muted-foreground">· {timeAgo(post.createdAt)}</span>
         </div>
         {summaryText && (
-          <div className="mt-2 rounded-md bg-neutral-100 p-3 text-sm text-neutral-700">
+          <div className="mt-2 rounded-md bg-muted p-3 text-sm text-foreground">
             <span className="font-medium">TL;DR:</span> {summaryText}
           </div>
         )}
-        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-neutral-800">
+        <p className="mt-3 whitespace-pre-wrap break-words text-sm text-foreground">
           {renderRichText(post.content)}
         </p>
 
@@ -158,7 +158,7 @@ export default async function PostPage({
           const pollTotal = post.poll.options.reduce((s, o) => s + o._count.votes, 0);
           const hasVoted = votedOptionIds.size > 0;
           return (
-            <div className="mt-5 rounded-lg border border-neutral-200 p-4">
+            <div className="mt-5 rounded-lg border border-border p-4">
               <div className="mb-3 font-medium">{post.poll.question}</div>
               <div className="flex flex-col gap-2">
                 {post.poll.options.map((opt) => {
@@ -169,19 +169,19 @@ export default async function PostPage({
                       <input type="hidden" name="pollOptionId" value={opt.id} />
                       <button
                         type="submit"
-                        className={`relative flex w-full items-center justify-between overflow-hidden rounded-md border px-3 py-2 text-sm hover:bg-neutral-50 ${
-                          mine ? "border-brand font-medium" : "border-neutral-200"
+                        className={`relative flex w-full items-center justify-between overflow-hidden rounded-md border px-3 py-2 text-sm hover:bg-muted ${
+                          mine ? "border-brand font-medium" : "border-border"
                         }`}
                       >
                         {hasVoted && (
                           <span
-                            className={`absolute inset-y-0 left-0 ${mine ? "bg-brand/15" : "bg-neutral-100"}`}
+                            className={`absolute inset-y-0 left-0 ${mine ? "bg-brand/15" : "bg-muted"}`}
                             style={{ width: `${pct}%` }}
                             aria-hidden
                           />
                         )}
                         <span className="relative min-w-0 truncate">{opt.text}</span>
-                        <span className="relative shrink-0 pl-3 text-neutral-500">
+                        <span className="relative shrink-0 pl-3 text-muted-foreground">
                           {hasVoted ? `${pct}% · ${opt._count.votes}` : opt._count.votes}
                         </span>
                       </button>
@@ -190,7 +190,7 @@ export default async function PostPage({
                 })}
               </div>
               {pollTotal > 0 && (
-                <div className="mt-2 text-xs text-neutral-400">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {pollTotal} {pollTotal === 1 ? "stem" : "stemmen"}
                 </div>
               )}
@@ -213,7 +213,7 @@ export default async function PostPage({
                   className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm transition-colors ${
                     mine
                       ? "border-brand bg-brand/10 text-brand"
-                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                      : "border-border text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   <span>{REACTION_EMOJI[type]}</span>
@@ -277,7 +277,7 @@ export default async function PostPage({
       </article>
 
       <section className="mt-6">
-        <h2 className="mb-3 text-sm font-semibold text-neutral-500">
+        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
           {post.comments.length} reacties
         </h2>
 
@@ -290,7 +290,7 @@ export default async function PostPage({
                 required
                 rows={2}
                 placeholder="Schrijf een reactie…"
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
               <div className="flex justify-end">
                 <Button type="submit" size="sm">
@@ -304,15 +304,15 @@ export default async function PostPage({
         <div className="flex flex-col gap-3">
           {topComments.map((comment) => (
             <div key={comment.id} className="flex flex-col gap-2">
-              <div className="rounded-lg border border-neutral-200 bg-white p-4">
+              <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center gap-2">
                   <Avatar src={comment.author.image} name={comment.author.name ?? comment.author.email} size={24} />
-                  <span className="min-w-0 truncate text-xs font-medium text-neutral-700">
+                  <span className="min-w-0 truncate text-xs font-medium text-foreground">
                     {comment.author.name ?? comment.author.email}
                   </span>
-                  <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(comment.createdAt)}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">· {timeAgo(comment.createdAt)}</span>
                 </div>
-                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-foreground">
                   {renderRichText(comment.content)}
                 </p>
                 <div className="mt-2 flex items-center gap-4">
@@ -321,7 +321,7 @@ export default async function PostPage({
                     <input type="hidden" name="targetId" value={comment.id} />
                     <button
                       type="submit"
-                      className={`text-xs hover:text-neutral-700 ${myReacted.has(comment.id) ? "font-medium text-neutral-900" : "text-neutral-400"}`}
+                      className={`text-xs hover:text-foreground ${myReacted.has(comment.id) ? "font-medium text-foreground" : "text-muted-foreground"}`}
                     >
                       ♥ {commentReactions.get(comment.id) ?? 0}
                     </button>
@@ -330,7 +330,7 @@ export default async function PostPage({
                     <input type="hidden" name="targetType" value="comment" />
                     <input type="hidden" name="targetId" value={comment.id} />
                     <input type="hidden" name="redirectPath" value={path} />
-                    <button type="submit" className="text-xs text-neutral-400 hover:text-neutral-700">
+                    <button type="submit" className="text-xs text-muted-foreground hover:text-foreground">
                       ⚑ rapporteer
                     </button>
                   </form>
@@ -338,15 +338,15 @@ export default async function PostPage({
               </div>
 
               {(repliesByParent.get(comment.id) ?? []).map((reply) => (
-                <div key={reply.id} className="ml-6 rounded-lg border border-neutral-200 bg-white p-4">
+                <div key={reply.id} className="ml-6 rounded-lg border border-border bg-card p-4">
                   <div className="flex items-center gap-2">
                     <Avatar src={reply.author.image} name={reply.author.name ?? reply.author.email} size={24} />
-                    <span className="min-w-0 truncate text-xs font-medium text-neutral-700">
+                    <span className="min-w-0 truncate text-xs font-medium text-foreground">
                       {reply.author.name ?? reply.author.email}
                     </span>
-                    <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(reply.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">· {timeAgo(reply.createdAt)}</span>
                   </div>
-                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">
+                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-foreground">
                     {renderRichText(reply.content)}
                   </p>
                   <form action={toggleReaction} className="mt-2">
@@ -354,7 +354,7 @@ export default async function PostPage({
                     <input type="hidden" name="targetId" value={reply.id} />
                     <button
                       type="submit"
-                      className={`text-xs hover:text-neutral-700 ${myReacted.has(reply.id) ? "font-medium text-neutral-900" : "text-neutral-400"}`}
+                      className={`text-xs hover:text-foreground ${myReacted.has(reply.id) ? "font-medium text-foreground" : "text-muted-foreground"}`}
                     >
                       ♥ {commentReactions.get(reply.id) ?? 0}
                     </button>
@@ -369,7 +369,7 @@ export default async function PostPage({
                   name="content"
                   required
                   placeholder="Antwoord…"
-                  className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+                  className="flex-1 rounded-md border border-input px-2 py-1 text-sm"
                 />
                 <Button type="submit" size="sm" variant="ghost">
                   Antwoord

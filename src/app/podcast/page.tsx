@@ -25,7 +25,7 @@ export default async function PodcastPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Podcast</h1>
-      <p className="mb-8 text-sm text-neutral-500">De laatste afleveringen van InvestorClub.</p>
+      <p className="mb-8 text-sm text-muted-foreground">De laatste afleveringen van InvestorClub.</p>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
@@ -35,17 +35,17 @@ export default async function PodcastPage() {
 
       <div className="flex flex-col gap-4">
         {episodes.map((e) => (
-          <div key={e.id} className="rounded-xl border border-neutral-200 bg-white p-5">
+          <div key={e.id} className="rounded-xl border border-border bg-card p-5">
             <div className="font-semibold">{e.title}</div>
-            <div className="mb-3 text-xs text-neutral-400">{fmtDate(e.publishedAt)}</div>
-            {e.description && <p className="mb-3 text-sm text-neutral-600">{e.description}</p>}
+            <div className="mb-3 text-xs text-muted-foreground">{fmtDate(e.publishedAt)}</div>
+            {e.description && <p className="mb-3 text-sm text-muted-foreground">{e.description}</p>}
             <audio controls preload="none" src={e.audioUrl} className="w-full">
               Je browser ondersteunt geen audio.
             </audio>
           </div>
         ))}
         {episodes.length === 0 && !dbError && (
-          <p className="text-center text-sm text-neutral-400">Nog geen afleveringen.</p>
+          <p className="text-center text-sm text-muted-foreground">Nog geen afleveringen.</p>
         )}
       </div>
     </div>

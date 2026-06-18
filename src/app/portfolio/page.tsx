@@ -36,7 +36,7 @@ export default async function PortfolioPage() {
           <CardHeader>
             <CardTitle>Premium-perk</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-neutral-600">
+          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
             <p>Portfolio-koppeling is voorbehouden aan premium-leden.</p>
             <Link href="/pricing">
               <Button className="w-full">Bekijk lidmaatschappen</Button>
@@ -53,12 +53,12 @@ export default async function PortfolioPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Portfolio</h1>
-      <p className="mb-6 text-sm text-neutral-500">Je gekoppelde investeren.org-portfolio.</p>
+      <p className="mb-6 text-sm text-muted-foreground">Je gekoppelde investeren.org-portfolio.</p>
 
       {!link ? (
         <Card>
           <CardContent className="flex flex-col gap-4 pt-6">
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               Koppel je investeren.org-account om je portfolio hier te zien.
             </p>
             <form action={linkPortfolio}>
@@ -79,17 +79,17 @@ export default async function PortfolioPage() {
             <CardHeader>
               <CardTitle className="text-3xl">{formatMoney(total)}</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-neutral-500">Totale waarde</CardContent>
+            <CardContent className="text-sm text-muted-foreground">Totale waarde</CardContent>
           </Card>
 
-          <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+          <div className="divide-y divide-border rounded-xl border border-border bg-card">
             {holdings.map((h) => (
               <div key={h.symbol} className="flex items-center justify-between gap-2 p-4">
                 <div className="min-w-0">
                   <div className="truncate font-medium">
                     {h.name} <Badge variant="secondary">{h.symbol}</Badge>
                   </div>
-                  <div className="text-xs text-neutral-400">
+                  <div className="text-xs text-muted-foreground">
                     {h.amount} {h.symbol} · {formatMoney(h.priceCents)}
                   </div>
                 </div>

@@ -32,7 +32,7 @@ export default async function AdminCoursesPage() {
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="isPublic" /> Publiek
               </label>
-              <select name="minTier" className="h-9 rounded-md border border-neutral-300 px-2">
+              <select name="minTier" className="h-9 rounded-md border border-input px-2">
                 <option value="">free</option>
                 <option value="basis">basis</option>
                 <option value="premium">premium</option>
@@ -49,19 +49,19 @@ export default async function AdminCoursesPage() {
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">Database nog niet gekoppeld.</p>
       )}
 
-      <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+      <div className="divide-y divide-border rounded-lg border border-border bg-card">
         {courses.map((c) => (
           <Link
             key={c.id}
             href={`/admin/courses/${c.id}`}
-            className="flex items-center justify-between p-4 hover:bg-neutral-50"
+            className="flex items-center justify-between p-4 hover:bg-muted"
           >
             <span className="font-medium">{c.title}</span>
             <Badge variant="secondary">{c.isPublic ? "publiek" : (c.minTier ?? "free")}</Badge>
           </Link>
         ))}
         {courses.length === 0 && !dbError && (
-          <p className="p-4 text-sm text-neutral-400">Nog geen cursussen.</p>
+          <p className="p-4 text-sm text-muted-foreground">Nog geen cursussen.</p>
         )}
       </div>
     </div>

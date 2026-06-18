@@ -41,7 +41,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <Link href="/members" className="text-sm text-neutral-500 hover:text-neutral-900">
+      <Link href="/members" className="text-sm text-muted-foreground hover:text-foreground">
         ← Leden
       </Link>
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -50,7 +50,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             <img src={member.image} alt="" className="mb-2 h-16 w-16 rounded-full object-cover" />
           )}
           <h1 className="text-2xl font-bold">{member.name ?? "Lid"}</h1>
-          {member.profile?.headline && <p className="text-neutral-600">{member.profile.headline}</p>}
+          {member.profile?.headline && <p className="text-muted-foreground">{member.profile.headline}</p>}
           <div className="mt-2 flex items-center gap-2">
             <Badge>{points} punten</Badge>
             {level && <Badge variant="secondary">{level.name}</Badge>}
@@ -72,7 +72,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
       </div>
 
       {member.profile?.bio && (
-        <p className="mt-5 whitespace-pre-wrap text-neutral-800">{member.profile.bio}</p>
+        <p className="mt-5 whitespace-pre-wrap text-foreground">{member.profile.bio}</p>
       )}
 
       {member.profile?.expertise && member.profile.expertise.length > 0 && (
@@ -87,7 +87,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
 
       {member.badges.length > 0 && (
         <div className="mt-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Badges</h2>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Badges</h2>
           <div className="flex flex-wrap gap-2">
             {member.badges.map((b) => (
               <Badge key={b.badgeId} variant="secondary">

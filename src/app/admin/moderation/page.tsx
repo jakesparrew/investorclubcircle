@@ -54,20 +54,20 @@ export default async function AdminModerationPage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-neutral-500">Open meldingen van leden.</p>
+      <p className="text-sm text-muted-foreground">Open meldingen van leden.</p>
       {dbError && (
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">Database nog niet gekoppeld.</p>
       )}
 
       {items.map(({ report, snippet, hidden }) => (
-        <div key={report.id} className="rounded-lg border border-neutral-200 bg-white p-4">
-          <div className="mb-1 flex items-center gap-2 text-xs text-neutral-400">
+        <div key={report.id} className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="secondary">{report.targetType}</Badge>
             <span>reden: {report.reason}</span>
             <span>· door {report.reporter.name ?? report.reporter.email}</span>
             {hidden && <Badge variant="danger">verborgen</Badge>}
           </div>
-          <p className="whitespace-pre-wrap text-sm text-neutral-800">{snippet}</p>
+          <p className="whitespace-pre-wrap text-sm text-foreground">{snippet}</p>
           <div className="mt-3 flex gap-2">
             {!hidden && (
               <form action={hideReportedContent}>
@@ -87,7 +87,7 @@ export default async function AdminModerationPage() {
         </div>
       ))}
       {items.length === 0 && !dbError && (
-        <p className="text-sm text-neutral-400">Geen open meldingen.</p>
+        <p className="text-sm text-muted-foreground">Geen open meldingen.</p>
       )}
     </div>
   );

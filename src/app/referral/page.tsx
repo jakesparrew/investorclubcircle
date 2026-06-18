@@ -36,7 +36,7 @@ export default async function ReferralPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="mb-1 text-2xl font-bold">Nodig vrienden uit</h1>
-      <p className="mb-8 text-sm text-neutral-500">
+      <p className="mb-8 text-sm text-muted-foreground">
         Deel je persoonlijke link. Nieuwe leden die zich via jou inschrijven worden aan jou
         gekoppeld.
       </p>
@@ -52,19 +52,19 @@ export default async function ReferralPage() {
           {affiliate && link ? (
             <div className="flex flex-col gap-3">
               <div>
-                <div className="text-xs text-neutral-500">Jouw link</div>
-                <div className="mt-1 break-all rounded-md border border-neutral-200 bg-neutral-50 p-2 text-sm">
+                <div className="text-xs text-muted-foreground">Jouw link</div>
+                <div className="mt-1 break-all rounded-md border border-border bg-muted p-2 text-sm">
                   {link}
                 </div>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Aangebracht</span>
+                <span className="text-muted-foreground">Aangebracht</span>
                 <span className="font-medium">{conversions} leden</span>
               </div>
             </div>
           ) : (
             <form action={getOrCreateAffiliateCode}>
-              <p className="mb-3 text-sm text-neutral-600">Genereer je persoonlijke uitnodigingslink.</p>
+              <p className="mb-3 text-sm text-muted-foreground">Genereer je persoonlijke uitnodigingslink.</p>
               <Button type="submit">Maak mijn link</Button>
             </form>
           )}

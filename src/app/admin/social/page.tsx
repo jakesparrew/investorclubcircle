@@ -19,7 +19,7 @@ export default async function AdminSocialPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted-foreground">
         AI-gegenereerde social-varianten uit community-posts. Keur goed of verwijder (human-in-the-loop).
         Genereren doe je via de ✨-knop onder een post.
       </p>
@@ -29,12 +29,12 @@ export default async function AdminSocialPage() {
       )}
 
       {posts.map((sp) => (
-        <div key={sp.id} className="rounded-lg border border-neutral-200 bg-white p-4">
+        <div key={sp.id} className="rounded-lg border border-border bg-card p-4">
           <div className="mb-2 flex items-center gap-2">
             <Badge variant="secondary">{sp.platform}</Badge>
             <Badge variant={sp.status === "approved" ? "success" : "secondary"}>{sp.status}</Badge>
           </div>
-          <p className="whitespace-pre-wrap text-sm text-neutral-800">{sp.content}</p>
+          <p className="whitespace-pre-wrap text-sm text-foreground">{sp.content}</p>
           <div className="mt-3 flex gap-2">
             {sp.status === "draft" && (
               <form action={approveSocialPost}>
@@ -54,7 +54,7 @@ export default async function AdminSocialPage() {
         </div>
       ))}
       {posts.length === 0 && !dbError && (
-        <p className="text-sm text-neutral-400">Nog geen AI-varianten. Genereer er via de ✨-knop onder een post.</p>
+        <p className="text-sm text-muted-foreground">Nog geen AI-varianten. Genereer er via de ✨-knop onder een post.</p>
       )}
     </div>
   );

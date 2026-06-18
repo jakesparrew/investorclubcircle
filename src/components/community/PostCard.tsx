@@ -20,27 +20,27 @@ export function PostCard({ post, showSpace = true }: { post: PostCardData; showS
   return (
     <Link
       href={`/community/${post.spaceSlug}/${post.id}`}
-      className={`block rounded-xl border bg-white p-4 transition-colors hover:border-neutral-300 ${
-        post.pinned ? "border-brand/40 bg-brand/5" : "border-neutral-200"
+      className={`block rounded-xl border bg-card p-4 transition-colors hover:border-input ${
+        post.pinned ? "border-brand/40 bg-brand/5" : "border-border"
       }`}
     >
-      <div className="mb-2 flex min-w-0 items-center gap-2 text-xs text-neutral-500">
+      <div className="mb-2 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
         <Avatar src={post.authorImage} name={post.authorName} size={28} />
-        <span className="min-w-0 truncate font-medium text-neutral-700">{post.authorName}</span>
+        <span className="min-w-0 truncate font-medium text-foreground">{post.authorName}</span>
         {showSpace && (
-          <span className="shrink-0 truncate rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-500">
+          <span className="shrink-0 truncate rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
             {post.spaceName}
           </span>
         )}
-        <span className="shrink-0 text-neutral-300">·</span>
-        <time className="shrink-0 text-neutral-400">{timeAgo(post.createdAt)}</time>
+        <span className="shrink-0 text-muted-foreground">·</span>
+        <time className="shrink-0 text-muted-foreground">{timeAgo(post.createdAt)}</time>
         {post.pinned && <span className="ml-auto shrink-0 text-brand">📌</span>}
       </div>
-      {post.title && <h3 className="font-semibold text-neutral-900 break-words">{post.title}</h3>}
-      <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm text-neutral-700">
+      {post.title && <h3 className="font-semibold text-foreground break-words">{post.title}</h3>}
+      <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-sm text-foreground">
         {post.content}
       </p>
-      <div className="mt-3 flex items-center gap-1 text-xs text-neutral-400">
+      <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
         <MessageSquare className="size-3.5" /> {post.commentCount}
       </div>
     </Link>

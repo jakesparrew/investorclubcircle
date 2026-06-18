@@ -36,7 +36,7 @@ export default async function AdminStreamsPage() {
               </label>
               <label className="flex items-center gap-2">
                 Min. tier:
-                <select name="minTier" className="h-9 rounded-md border border-neutral-300 px-2">
+                <select name="minTier" className="h-9 rounded-md border border-input px-2">
                   <option value="">free</option>
                   <option value="basis">basis</option>
                   <option value="premium">premium</option>
@@ -56,7 +56,7 @@ export default async function AdminStreamsPage() {
 
       <div className="flex flex-col gap-3">
         {streams.map((s) => (
-          <div key={s.id} className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-4">
+          <div key={s.id} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{s.title}</span>
@@ -78,7 +78,7 @@ export default async function AdminStreamsPage() {
           </div>
         ))}
         {streams.length === 0 && !dbError && (
-          <p className="text-sm text-neutral-400">Nog geen streams.</p>
+          <p className="text-sm text-muted-foreground">Nog geen streams.</p>
         )}
       </div>
     </div>

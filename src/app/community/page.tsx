@@ -64,7 +64,7 @@ export default async function CommunityPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-xl font-bold">Feed</h1>
-      <p className="mb-6 text-sm text-neutral-500">De laatste berichten uit je spaces.</p>
+      <p className="mb-6 text-sm text-muted-foreground">De laatste berichten uit je spaces.</p>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
@@ -77,9 +77,9 @@ export default async function CommunityPage({
           <PostCard key={p.id} post={p} />
         ))}
         {posts.length === 0 && !dbError && (
-          <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-center">
-            <p className="text-sm text-neutral-500">Nog geen berichten in je spaces.</p>
-            <p className="mt-1 text-xs text-neutral-400">Kies links een space om iets te plaatsen.</p>
+          <div className="rounded-xl border border-dashed border-input bg-card p-10 text-center">
+            <p className="text-sm text-muted-foreground">Nog geen berichten in je spaces.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Kies links een space om iets te plaatsen.</p>
           </div>
         )}
       </div>
@@ -88,7 +88,7 @@ export default async function CommunityPage({
         <div className="mt-6 text-center">
           <Link
             href={`/community?limit=${limit + PAGE}`}
-            className="inline-block rounded-full border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            className="inline-block rounded-full border border-input bg-card px-5 py-2 text-sm font-medium text-foreground hover:bg-muted"
           >
             Toon meer
           </Link>

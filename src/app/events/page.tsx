@@ -29,17 +29,17 @@ function EventCard({ event, accessible, past }: { event: Event; accessible: bool
 
   const inner = (
     <div
-      className={`flex h-full gap-3 rounded-xl border border-neutral-200 bg-white p-4 transition-colors hover:border-neutral-300 ${
+      className={`flex h-full gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-input ${
         past ? "opacity-70" : ""
       }`}
     >
       <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-surface">
-        <span className="text-xs uppercase text-neutral-400">{month}</span>
+        <span className="text-xs uppercase text-muted-foreground">{month}</span>
         <span className="text-xl font-bold leading-none">{day}</span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="font-semibold break-words">{event.title}</div>
-        <div className="text-sm text-neutral-500">
+        <div className="text-sm text-muted-foreground">
           {time}
           {endTime ? `–${endTime}` : ""}
           {event.location ? ` · ${event.location}` : ""}
@@ -99,7 +99,7 @@ export default async function EventsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-xl font-bold">Events</h1>
-      <p className="mb-6 text-sm text-neutral-500">
+      <p className="mb-6 text-sm text-muted-foreground">
         Reserveer je plek. Leden betalen een terugbetaalbare waarborg van €1.
       </p>
 
@@ -116,14 +116,14 @@ export default async function EventsPage() {
       )}
 
       {upcoming.length === 0 && !dbError && (
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-center">
-          <p className="text-sm text-neutral-500">Nog geen geplande events.</p>
+        <div className="rounded-xl border border-dashed border-input bg-card p-10 text-center">
+          <p className="text-sm text-muted-foreground">Nog geen geplande events.</p>
         </div>
       )}
 
       {past.length > 0 && (
         <>
-          <h2 className="mb-3 mt-10 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+          <h2 className="mb-3 mt-10 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Afgelopen
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">

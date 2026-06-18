@@ -41,7 +41,7 @@ export default async function AdminSpacesPage() {
           <CardContent className="pt-6">
             <h2 className="mb-3 font-semibold">Nieuwe space</h2>
             <form action={createSpace} className="flex flex-col gap-2">
-              <select name="spaceGroupId" required className="h-10 rounded-md border border-neutral-300 px-2 text-sm">
+              <select name="spaceGroupId" required className="h-10 rounded-md border border-input px-2 text-sm">
                 <option value="">Kies groep…</option>
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>
@@ -55,7 +55,7 @@ export default async function AdminSpacesPage() {
                 <label className="flex items-center gap-2">
                   <input type="checkbox" name="isPublic" /> Publiek
                 </label>
-                <select name="minTier" className="h-9 rounded-md border border-neutral-300 px-2">
+                <select name="minTier" className="h-9 rounded-md border border-input px-2">
                   <option value="">free</option>
                   <option value="basis">basis</option>
                   <option value="premium">premium</option>
@@ -74,15 +74,15 @@ export default async function AdminSpacesPage() {
       <div className="flex flex-col gap-4">
         {groups.map((g) => (
           <div key={g.id}>
-            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">{g.name}</h3>
-            <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g.name}</h3>
+            <div className="divide-y divide-border rounded-lg border border-border bg-card">
               {g.spaces.map((s) => (
                 <div key={s.id} className="flex items-center justify-between p-3 text-sm">
                   <span>{s.name}</span>
                   <Badge variant="secondary">{s.isPublic ? "publiek" : (s.minTier ?? "free")}</Badge>
                 </div>
               ))}
-              {g.spaces.length === 0 && <div className="p-3 text-sm text-neutral-400">Nog geen spaces.</div>}
+              {g.spaces.length === 0 && <div className="p-3 text-sm text-muted-foreground">Nog geen spaces.</div>}
             </div>
           </div>
         ))}

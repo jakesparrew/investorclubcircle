@@ -24,7 +24,7 @@ export function renderRichText(text: string): ReactNode {
       out.push(<strong key={key++}>{tok.slice(2, -2)}</strong>);
     } else if (tok.startsWith("`") && tok.endsWith("`")) {
       out.push(
-        <code key={key++} className="rounded bg-neutral-100 px-1 py-0.5 text-[0.85em]">
+        <code key={key++} className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
           {tok.slice(1, -1)}
         </code>,
       );

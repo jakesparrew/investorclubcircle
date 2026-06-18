@@ -32,7 +32,7 @@ export async function OnboardingChecklist({ userId, orgId }: { userId: string; o
           const completed = done.has(step.key);
           return (
             <div key={step.id} className="flex items-center justify-between text-sm">
-              <span className={completed ? "text-neutral-400 line-through" : ""}>{step.title}</span>
+              <span className={completed ? "text-muted-foreground line-through" : ""}>{step.title}</span>
               {completed ? (
                 <span className="text-emerald-600">✓</span>
               ) : (

@@ -21,7 +21,7 @@ export function Avatar({
     <span
       style={dim}
       className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-600",
+        "grid shrink-0 place-items-center rounded-full bg-muted text-xs font-medium text-muted-foreground",
         className,
       )}
     >

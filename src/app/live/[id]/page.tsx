@@ -33,7 +33,7 @@ export default async function StreamPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <Link href="/live" className="text-sm text-neutral-500 hover:text-neutral-900">
+      <Link href="/live" className="text-sm text-muted-foreground hover:text-foreground">
         ← Live
       </Link>
       <div className="mt-2 flex items-center gap-2">
@@ -41,9 +41,9 @@ export default async function StreamPage({ params }: { params: Promise<{ id: str
         {stream.status === "live" && <Badge variant="danger">● LIVE</Badge>}
         {stream.status === "ended" && <Badge variant="secondary">Opname</Badge>}
       </div>
-      {stream.description && <p className="mt-1 text-neutral-600">{stream.description}</p>}
+      {stream.description && <p className="mt-1 text-muted-foreground">{stream.description}</p>}
 
-      <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-neutral-200 bg-black">
+      <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
         <iframe
           src={url}
           className="h-full w-full"

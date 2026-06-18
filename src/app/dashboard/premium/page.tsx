@@ -38,7 +38,7 @@ export default async function PremiumPage() {
           <CardHeader>
             <CardTitle>Premium vereist</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-neutral-600">
+          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
             <p>{reason ? REASON_COPY[reason] : "Geen toegang."}</p>
             <Link href="/pricing">
               <Button className="w-full">Bekijk lidmaatschappen</Button>
@@ -52,7 +52,7 @@ export default async function PremiumPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
       <h1 className="text-2xl font-bold">Premium-inhoud 🎉</h1>
-      <p className="mt-2 text-neutral-600">
+      <p className="mt-2 text-muted-foreground">
         Je hebt premium-toegang. Hier komen exclusieve analyses, gated streams en perks.
       </p>
     </div>

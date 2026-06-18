@@ -76,10 +76,10 @@ export function AppShell({
   return (
     <div className="min-h-full">
       <CommandPalette isAdmin={user.role === "ADMIN"} />
-      <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-border bg-card">
         <div className="flex h-14 items-center gap-2 px-3 sm:px-4">
           <button
-            className="rounded-md p-2 text-neutral-600 hover:bg-neutral-100 lg:hidden"
+            className="rounded-md p-2 text-muted-foreground hover:bg-muted lg:hidden"
             onClick={() => setOpen(true)}
             aria-label="Menu openen"
           >
@@ -99,8 +99,8 @@ export function AppShell({
                 className={cx(
                   "rounded-full px-3 py-1.5 text-sm transition-colors",
                   isActive(t.href)
-                    ? "bg-neutral-100 font-medium text-neutral-900"
-                    : "text-neutral-600 hover:bg-neutral-50",
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-muted",
                 )}
               >
                 {t.label}
@@ -123,8 +123,8 @@ export function AppShell({
                   aria-label={count ? `${label} (${count} nieuw)` : label}
                   aria-current={isActive(href) ? "page" : undefined}
                   className={cx(
-                    "relative hidden rounded-md p-2 hover:bg-neutral-100 sm:block",
-                    isActive(href) ? "text-brand" : "text-neutral-500 hover:text-neutral-800",
+                    "relative hidden rounded-md p-2 hover:bg-muted sm:block",
+                    isActive(href) ? "text-brand" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="size-5" />
@@ -142,7 +142,7 @@ export function AppShell({
       </header>
 
       <div className="flex">
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-neutral-200 bg-surface px-3 py-4 lg:block">
+        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-border bg-surface px-3 py-4 lg:block">
           <SidebarContent groups={groups} isActive={isActive} role={user.role} />
         </aside>
 
@@ -154,7 +154,7 @@ export function AppShell({
                 <button
                   onClick={() => setOpen(false)}
                   aria-label="Menu sluiten"
-                  className="rounded-md p-1 hover:bg-neutral-200"
+                  className="rounded-md p-1 hover:bg-muted"
                 >
                   <X className="size-5" />
                 </button>
@@ -198,12 +198,12 @@ function NavRow({
       aria-current={active ? "page" : undefined}
       className={cx(
         "flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
-        active ? "bg-brand/10 font-medium text-brand" : "text-neutral-700 hover:bg-neutral-200/60",
+        active ? "bg-brand/10 font-medium text-brand" : "text-foreground hover:bg-muted/60",
       )}
     >
       <span className="shrink-0">{icon}</span>
       <span className="min-w-0 flex-1 truncate">{text}</span>
-      {locked && <Lock className="size-3.5 shrink-0 text-neutral-400" />}
+      {locked && <Lock className="size-3.5 shrink-0 text-muted-foreground" />}
     </Link>
   );
 }
@@ -224,7 +224,7 @@ function SidebarContent({
   return (
     <nav className="flex flex-col gap-4">
       {showTabs && (
-        <div className="flex flex-col gap-0.5 border-b border-neutral-200 pb-3">
+        <div className="flex flex-col gap-0.5 border-b border-border pb-3">
           {TABS.map((t) => (
             <NavRow
               key={t.href}
@@ -250,14 +250,14 @@ function SidebarContent({
 
       {groups.map((g) => (
         <div key={g.name} className="flex flex-col gap-0.5">
-          <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {g.name}
           </div>
           {g.spaces.map((s) => (
             <NavRow
               key={s.slug}
               href={`/community/${s.slug}`}
-              icon={<Hash className="size-4 text-neutral-400" />}
+              icon={<Hash className="size-4 text-muted-foreground" />}
               text={s.name}
               active={isActive(`/community/${s.slug}`)}
               locked={!s.accessible}
@@ -268,22 +268,22 @@ function SidebarContent({
       ))}
 
       <div className="flex flex-col gap-0.5">
-        <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Kanalen
         </div>
-        <NavRow href="/live" icon={<Radio className="size-4 text-neutral-400" />} text="Live" active={isActive("/live")} onNavigate={onNavigate} />
-        <NavRow href="/podcast" icon={<Mic className="size-4 text-neutral-400" />} text="Podcast" active={isActive("/podcast")} onNavigate={onNavigate} />
-        <NavRow href="/portfolio" icon={<LineChart className="size-4 text-neutral-400" />} text="Portfolio" active={isActive("/portfolio")} onNavigate={onNavigate} />
+        <NavRow href="/live" icon={<Radio className="size-4 text-muted-foreground" />} text="Live" active={isActive("/live")} onNavigate={onNavigate} />
+        <NavRow href="/podcast" icon={<Mic className="size-4 text-muted-foreground" />} text="Podcast" active={isActive("/podcast")} onNavigate={onNavigate} />
+        <NavRow href="/portfolio" icon={<LineChart className="size-4 text-muted-foreground" />} text="Portfolio" active={isActive("/portfolio")} onNavigate={onNavigate} />
       </div>
 
       {role === "ADMIN" && (
-        <div className="flex flex-col gap-0.5 border-t border-neutral-200 pt-3">
-          <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+        <div className="flex flex-col gap-0.5 border-t border-border pt-3">
+          <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Beheer
           </div>
           <NavRow
             href="/admin"
-            icon={<Shield className="size-4 text-neutral-400" />}
+            icon={<Shield className="size-4 text-muted-foreground" />}
             text="Adminpaneel"
             active={isActive("/admin")}
             onNavigate={onNavigate}
