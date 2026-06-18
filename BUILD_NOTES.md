@@ -142,3 +142,29 @@ Mogelijke verzachtingen / alternatieven om vóór de bouw te beslissen:
 - **Vimeo Live**: heeft API (event aanmaken kan), maar betaald abonnement (Advanced ~€65/mnd); zelfde
   categorie als bovenstaande, duurder instap. Niet eenvoudiger.
 - **Aanrader voor "browser + platform regelt event": Cloudflare Stream of Daily.co** (usage-based).
+
+### ✅ Beslissing (2026-06-19): LiveKit self-hosted op een VPS
+Gekozen richting voor "Go Live": **LiveKit self-host** (browser-streaming zonder OBS, controle, lage vaste kost).
+
+**Cruciaal ontwerp-detail — kijkers via HLS, niet rauwe WebRTC:**
+- LiveKit is een WebRTC SFU. Host → veel kijkers puur over WebRTC = de VPS relayt media naar ELKE kijker
+  → bandbreedte schaalt lineair (prima voor tientallen, duur voor honderden).
+- Schaal-vriendelijk patroon: host streamt WebRTC → **LiveKit Egress → HLS → CDN** voor kijkers. VPS-last
+  blijft laag, kijkers schalen goedkoop. Egress doet ook opname (naar S3) en kan simulcasten naar YouTube.
+
+**VPS / infra-stack (later op te zetten):**
+- Klein VPS (~€5–10/mnd, 2–4 vCPU, 4–8 GB) voor `livekit-server` + `redis`. Egress (HLS/opname) wil
+  2–4 vCPU extra (transcoding).
+- Domein + **TLS verplicht** (WebRTC vereist secure context). UDP-poortrange open + TCP/TLS fallback; LiveKit
+  heeft ingebouwde TURN.
+- Containers: livekit-server + redis (basis); + egress + (optioneel) ingress voor RTMP-in (OBS) / RTMP-out (YouTube).
+- Opname → object storage (S3 / Supabase Storage).
+- **Ops-realiteit:** jij bewaakt updates/uptime/TLS. Lager-effort start = **LiveKit Cloud free tier** (zelfde
+  app-code), later naar self-host als kost groeit.
+
+**Platform-kant om te bouwen (zelfde of het nu Cloud of self-host is):**
+- `LiveSession`-model (room, host, status, tier-gating, recordingUrl).
+- Server-side token-endpoint (LiveKit access tokens; host = publish, kijker = subscribe-only).
+- Host "Go Live"-pagina (browser camera via `@livekit/components-react`).
+- Kijkerspagina: HLS-player (schaal) of WebRTC-subscribe (klein), achter `canAccess()`.
+- Webhook van LiveKit → status live/ended + opname-URL opslaan.
