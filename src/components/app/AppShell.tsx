@@ -21,6 +21,7 @@ import {
   CalendarDays,
   Users,
   Trophy,
+  Shield,
 } from "lucide-react";
 import { UserMenu } from "@/components/app/UserMenu";
 import { CommandPalette } from "@/components/app/CommandPalette";
@@ -274,6 +275,21 @@ function SidebarContent({
         <NavRow href="/podcast" icon={<Mic className="size-4 text-neutral-400" />} text="Podcast" active={isActive("/podcast")} onNavigate={onNavigate} />
         <NavRow href="/portfolio" icon={<LineChart className="size-4 text-neutral-400" />} text="Portfolio" active={isActive("/portfolio")} onNavigate={onNavigate} />
       </div>
+
+      {role === "ADMIN" && (
+        <div className="flex flex-col gap-0.5 border-t border-neutral-200 pt-3">
+          <div className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Beheer
+          </div>
+          <NavRow
+            href="/admin"
+            icon={<Shield className="size-4 text-neutral-400" />}
+            text="Adminpaneel"
+            active={isActive("/admin")}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
 
       <div className="mt-1">
         <Link
