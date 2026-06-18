@@ -99,3 +99,34 @@ npm run db:migrate     # of: npm run db:push
 npm run db:seed
 npm run dev            # http://localhost:3000
 ```
+
+## 🔜 Backlog — "Go Live" automatisering (genoteerd 2026-06-19)
+
+**Nu:** `/admin/streams` is handmatig — host plakt een YouTube-embed-URL, platform toont die
+met tier-toegang (`Livestream.embedUrl`, status scheduled/live/ended). Geen auto-aanmaak.
+
+**Gevraagd:** "Go Live" laat het platform de live volledig zelf aanmaken (link + alles) via API.
+
+### Optie A — YouTube Live via API (gekozen richting, later bouwen)
+Platform maakt de uitzending automatisch aan via de YouTube Live Streaming API:
+1. Eenmalige OAuth-koppeling van het YouTube-kanaal ("Koppel YouTube") → nieuw `YouTubeAccount`-model
+   (access/refresh token veilig opslaan).
+2. Bij "Go Live": `liveBroadcasts.insert` (uitzending) + `liveStreams.insert` (RTMP-ingest + streamsleutel)
+   + `liveBroadcasts.bind`; sla embed/kijklink automatisch op in `Livestream` (geen plakken meer).
+3. Status pollen (`liveBroadcasts.list`) → auto `live`/`ended`; na afloop opname-URL ophalen.
+- Randvoorwaarden: kanaal met live streaming aan; Google Cloud OAuth-app; gratis quota (ruim genoeg).
+- Nodig van Gaetan: Google OAuth client id/secret + kanaal koppelen. (Past bij "API-gedoe later".)
+
+### ⚠️ Open punt — OBS-drempel voor hosts (Gaetan's terechte zorg)
+De API maakt de live aan, maar de host moet het **camerabeeld** nog naar YouTube duwen via RTMP.
+Dat betekent **OBS (PC) of YouTube-app (telefoon)** — een reële drempel voor niet-technische hosts.
+Mogelijke verzachtingen / alternatieven om vóór de bouw te beslissen:
+- **YouTube-telefoonapp**: live vanaf gsm (maar vereist 50+ abonnees, en beeld loopt niet via onze API).
+- **Browser-studio's (Streamyard / Restream / Riverside)**: vriendelijker dan OBS, streamen naar YouTube
+  via RTMP — maar nog steeds een externe tool.
+- **Echt nul-drempel (geen tool, camera recht uit de browser)** = NIET via YouTube. Dan nodig:
+  **LiveKit / Daily / Mux / Cloudflare Stream** (WebRTC-infra, betaald per minuut/kijker). 1 knop →
+  camera live op het platform, inclusief opname. Mooiste UX voor hosts, maar kosten + andere koppeling.
+
+**Beslissing voor later:** gratis + groot bereik maar host-OBS (YouTube-API) **vs** betaald + nul host-drempel
+(LiveKit/Daily). Leden/kijkers merken in beide gevallen niks — die kijken gewoon op het platform.
