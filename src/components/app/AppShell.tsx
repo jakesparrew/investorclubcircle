@@ -22,10 +22,12 @@ import {
   Users,
   Trophy,
 } from "lucide-react";
+import { UserMenu } from "@/components/app/UserMenu";
 
 type SpaceItem = { name: string; slug: string; accessible: boolean };
 type Group = { name: string; spaces: SpaceItem[] };
 type ShellUser = { id: string; name: string | null; image: string | null; role: string };
+type Unread = { messages: number; notifications: number };
 
 const TABS = [
   { href: "/community", label: "Home", Icon: Home },
@@ -42,16 +44,19 @@ function cx(...c: (string | false | undefined)[]) {
 export function AppShell({
   user,
   groups,
+  unread,
   children,
 }: {
   user: ShellUser;
   groups: Group[];
+  unread?: Unread;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
-  const initials = (user.name ?? "?").slice(0, 1).toUpperCase();
+  const badgeFor = (href: string) =>
+    href === "/notifications" ? unread?.notifications ?? 0 : href === "/messages" ? unread?.messages ?? 0 : 0;
 
   useEffect(() => {
     if (!open) return;
@@ -106,30 +111,29 @@ export function AppShell({
               { href: "/notifications", label: "Meldingen", Icon: Bell },
               { href: "/messages", label: "Berichten", Icon: MessageSquare },
               { href: "/bookmarks", label: "Bewaard", Icon: Bookmark },
-            ].map(({ href, label, Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                aria-label={label}
-                aria-current={isActive(href) ? "page" : undefined}
-                className={cx(
-                  "hidden rounded-md p-2 hover:bg-neutral-100 sm:block",
-                  isActive(href) ? "text-brand" : "text-neutral-500 hover:text-neutral-800",
-                )}
-              >
-                <Icon className="size-5" />
-              </Link>
-            ))}
-            <Link href="/dashboard" aria-label="Profiel" className="ml-1 shrink-0">
-              {user.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.image} alt="" className="size-8 rounded-full object-cover" />
-              ) : (
-                <span className="grid size-8 place-items-center rounded-full bg-neutral-200 text-sm font-medium">
-                  {initials}
-                </span>
-              )}
-            </Link>
+            ].map(({ href, label, Icon }) => {
+              const count = badgeFor(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-label={count ? `${label} (${count} nieuw)` : label}
+                  aria-current={isActive(href) ? "page" : undefined}
+                  className={cx(
+                    "relative hidden rounded-md p-2 hover:bg-neutral-100 sm:block",
+                    isActive(href) ? "text-brand" : "text-neutral-500 hover:text-neutral-800",
+                  )}
+                >
+                  <Icon className="size-5" />
+                  {count > 0 && (
+                    <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold leading-4 text-white">
+                      {count > 9 ? "9+" : count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+            <UserMenu user={user} />
           </div>
         </div>
       </header>

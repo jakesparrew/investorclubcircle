@@ -49,6 +49,7 @@ export async function createEvent(formData: FormData) {
   if (!title) return;
   const o = await org();
   const startsAtRaw = str(formData, "startsAt");
+  const endsAtRaw = str(formData, "endsAt");
 
   await db.event.create({
     data: {
@@ -57,13 +58,16 @@ export async function createEvent(formData: FormData) {
       title,
       slug: str(formData, "slug") || slugify(title),
       description: str(formData, "description") || null,
+      coverImage: str(formData, "coverImage") || null,
       location: str(formData, "location") || null,
       startsAt: startsAtRaw ? new Date(startsAtRaw) : new Date(),
+      endsAt: endsAtRaw ? new Date(endsAtRaw) : null,
       capacity: intOrNull(formData, "capacity"),
       isPublic: formData.get("isPublic") === "on",
       minTier: tierOrNull(formData),
       depositAmount: centsOrNull(formData, "depositAmount"),
       nonMemberPrice: centsOrNull(formData, "nonMemberPrice"),
+      recordingUrl: str(formData, "recordingUrl") || null,
       status: "published",
     },
   });

@@ -67,19 +67,42 @@ export default async function EventPage({
     );
   }
 
-  const [registration, confirmedCount] = await Promise.all([
+  const [registration, confirmedCount, attendees] = await Promise.all([
     db.registration.findUnique({
       where: { eventId_userId: { eventId: event.id, userId: session.user.id } },
     }),
     db.registration.count({ where: { eventId: event.id, status: { in: ["confirmed", "pending"] } } }),
+    db.registration.findMany({
+      where: { eventId: event.id, status: { in: ["confirmed", "pending"] } },
+      include: { user: { select: { id: true, name: true, image: true } } },
+      orderBy: { createdAt: "asc" },
+      take: 10,
+    }),
   ]);
 
   const isHost = event.hostId === session.user.id || session.user.role === "ADMIN";
   const spotsLeft = event.capacity ? Math.max(0, event.capacity - confirmedCount) : null;
+  const recurring = Boolean(event.recurrenceRule || event.seriesId);
+  const isPast = event.startsAt.getTime() < Date.now();
   const day = new Intl.DateTimeFormat("nl-BE", { day: "numeric" }).format(event.startsAt);
   const month = new Intl.DateTimeFormat("nl-BE", { month: "short" }).format(event.startsAt).replace(".", "");
   const fullDate = new Intl.DateTimeFormat("nl-BE", { weekday: "long", day: "numeric", month: "long" }).format(event.startsAt);
   const time = new Intl.DateTimeFormat("nl-BE", { hour: "2-digit", minute: "2-digit" }).format(event.startsAt);
+  const endTime = event.endsAt
+    ? new Intl.DateTimeFormat("nl-BE", { hour: "2-digit", minute: "2-digit" }).format(event.endsAt)
+    : null;
+  const timeRange = endTime ? `${time}–${endTime}` : time;
+
+  const gcalFmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const gcalEnd = event.endsAt ?? new Date(event.startsAt.getTime() + 60 * 60 * 1000);
+  const googleCalUrl =
+    "https://calendar.google.com/calendar/render?action=TEMPLATE&" +
+    new URLSearchParams({
+      text: event.title,
+      dates: `${gcalFmt(event.startsAt)}/${gcalFmt(gcalEnd)}`,
+      details: event.description ?? "",
+      location: event.location ?? "",
+    }).toString();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -87,10 +110,21 @@ export default async function EventPage({
         ← Events
       </Link>
 
+      {event.coverImage && (
+        <div className="mt-3 aspect-[3/1] w-full overflow-hidden rounded-2xl bg-neutral-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={event.coverImage} alt="" className="h-full w-full object-cover" />
+        </div>
+      )}
+
       <div className="mt-3 grid gap-6 lg:grid-cols-3">
         {/* Main */}
         <div className="lg:col-span-2">
-          <h1 className="text-2xl font-bold">{event.title}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-bold break-words">{event.title}</h1>
+            {recurring && <Badge variant="secondary">Terugkerend</Badge>}
+            {isPast && <Badge variant="secondary">Afgelopen</Badge>}
+          </div>
           <div className="mt-2 flex items-center gap-2 text-sm text-neutral-500">
             <Avatar src={event.host.image} name={event.host.name ?? event.host.email} size={24} />
             Gehost door {event.host.name ?? event.host.email}
@@ -107,7 +141,7 @@ export default async function EventPage({
             <p className="mt-2 whitespace-pre-wrap text-neutral-700">{event.description}</p>
           )}
           <ul className="mt-4 flex flex-col gap-1 text-sm text-neutral-600">
-            <li>📅 {fullDate} · {time}</li>
+            <li className="capitalize">📅 {fullDate} · {timeRange}</li>
             {event.location && <li>📍 {event.location}</li>}
             <li>
               🎟️ Leden:{" "}
@@ -117,6 +151,46 @@ export default async function EventPage({
               · Niet-leden: {event.nonMemberPrice ? formatMoney(event.nonMemberPrice) : "gratis"}
             </li>
           </ul>
+
+          {isPast && event.recordingUrl && (
+            <div className="mt-6">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">Opname</h2>
+              <a
+                href={event.recordingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+              >
+                ▶ Bekijk de opname
+              </a>
+            </div>
+          )}
+
+          {attendees.length > 0 && (
+            <div className="mt-6">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                Deelnemers ({confirmedCount})
+              </h2>
+              <div className="flex items-center">
+                <div className="flex -space-x-2">
+                  {attendees.map((a) => (
+                    <Avatar
+                      key={a.user.id}
+                      src={a.user.image}
+                      name={a.user.name}
+                      size={32}
+                      className="ring-2 ring-white"
+                    />
+                  ))}
+                </div>
+                {confirmedCount > attendees.length && (
+                  <span className="ml-3 text-sm text-neutral-500">
+                    +{confirmedCount - attendees.length} meer
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sticky RSVP card */}
@@ -130,7 +204,7 @@ export default async function EventPage({
                 </div>
                 <div className="text-sm">
                   <div className="font-medium capitalize">{fullDate}</div>
-                  <div className="text-neutral-500">{time}</div>
+                  <div className="text-neutral-500">{timeRange}</div>
                 </div>
               </div>
 
@@ -153,6 +227,30 @@ export default async function EventPage({
                     Schrijf je in
                   </Button>
                 </form>
+              )}
+
+              {!isPast && (
+                <div className="flex flex-col gap-2 border-t border-neutral-100 pt-4">
+                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                    Toevoegen aan agenda
+                  </div>
+                  <div className="flex gap-2">
+                    <a
+                      href={`/events/${slug}/ics`}
+                      className="flex-1 rounded-md border border-neutral-200 px-3 py-1.5 text-center text-sm hover:bg-neutral-50"
+                    >
+                      Apple / iCal
+                    </a>
+                    <a
+                      href={googleCalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-md border border-neutral-200 px-3 py-1.5 text-center text-sm hover:bg-neutral-50"
+                    >
+                      Google
+                    </a>
+                  </div>
+                </div>
               )}
 
               {isHost && (

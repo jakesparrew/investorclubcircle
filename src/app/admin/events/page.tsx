@@ -28,8 +28,18 @@ export default async function AdminEventsPage() {
           <h2 className="mb-3 font-semibold">Nieuw event</h2>
           <form action={createEvent} className="grid gap-3 sm:grid-cols-2">
             <Input name="title" placeholder="Titel" required className="sm:col-span-2" />
+            <Input name="coverImage" placeholder="Cover-afbeelding URL (optioneel)" className="sm:col-span-2" />
             <Input name="location" placeholder="Locatie" />
-            <Input name="startsAt" type="datetime-local" />
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-xs text-neutral-500">
+                Start
+                <Input name="startsAt" type="datetime-local" />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-neutral-500">
+                Einde
+                <Input name="endsAt" type="datetime-local" />
+              </label>
+            </div>
             <Input name="capacity" type="number" placeholder="Capaciteit" />
             <select name="minTier" className="h-10 rounded-md border border-neutral-300 px-2 text-sm">
               <option value="">Min. tier: free</option>
@@ -38,6 +48,7 @@ export default async function AdminEventsPage() {
             </select>
             <Input name="depositAmount" placeholder="Waarborg leden (€, bv. 1)" />
             <Input name="nonMemberPrice" placeholder="Prijs niet-leden (€, bv. 29)" />
+            <Input name="recordingUrl" placeholder="Opname-URL (na afloop)" className="sm:col-span-2" />
             <textarea
               name="description"
               placeholder="Beschrijving"

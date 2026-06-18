@@ -35,7 +35,7 @@ export default async function AdminMembersPage() {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-neutral-200 text-left text-neutral-500">
             <th className="py-2 pr-4 font-medium">E-mail</th>

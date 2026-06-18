@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { listAccessibleSpaceGroups } from "@/lib/spaces";
+import { getUnreadCounts, type UnreadCounts } from "@/lib/unread";
 
 export const metadata: Metadata = {
   title: "InvestorClub — Community & Academy",
@@ -24,6 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const session = await auth();
 
   let groups: { name: string; spaces: { name: string; slug: string; accessible: boolean }[] }[] = [];
+  let unread: UnreadCounts = { messages: 0, notifications: 0 };
   if (session?.user) {
     try {
       const org = await db.organization.findFirst();
@@ -35,6 +37,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           spaces: x.spaces.map((s) => ({ name: s.name, slug: s.slug, accessible: s.accessible })),
         }));
       }
+      unread = await getUnreadCounts(session.user.id);
     } catch {
       // DB not connected — render shell without spaces.
     }
@@ -53,6 +56,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               role: session.user.role,
             }}
             groups={groups}
+            unread={unread}
           >
             {children}
           </AppShell>

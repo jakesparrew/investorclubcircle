@@ -812,6 +812,7 @@ model Event {
   title           String
   slug            String      @unique
   description     String?
+  coverImage      String?
   location        String?
   startsAt        DateTime
   endsAt          DateTime?

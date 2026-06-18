@@ -52,6 +52,14 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   }
   if (!conversation) redirect("/messages");
 
+  // Mark this thread as read for the current viewer.
+  await db.conversationMember
+    .update({
+      where: { conversationId_userId: { conversationId: id, userId: session.user.id } },
+      data: { lastReadAt: new Date() },
+    })
+    .catch(() => null);
+
   const me = session.user.id;
   const other = conversation.members.find((m) => m.user.id !== me);
   const title = conversation.title ?? other?.user.name ?? other?.user.email ?? "Gesprek";

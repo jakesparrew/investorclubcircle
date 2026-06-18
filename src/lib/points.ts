@@ -81,9 +81,10 @@ export async function getLoginStreak(userId: string): Promise<number> {
   return streak;
 }
 
-export async function getLeaderboard(limit = 20): Promise<LeaderboardRow[]> {
+export async function getLeaderboard(limit = 20, since?: Date): Promise<LeaderboardRow[]> {
   const rows = await db.pointsLedger.groupBy({
     by: ["userId"],
+    where: since ? { createdAt: { gte: since } } : undefined,
     _sum: { points: true },
     orderBy: { _sum: { points: "desc" } },
     take: limit,
