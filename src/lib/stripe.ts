@@ -103,6 +103,59 @@ export function createOneTimeCheckout(opts: {
   );
 }
 
+// ─── Billing portal & subscription management ───────────────────────────────
+
+export function createBillingPortalSession(
+  connectedAccountId: string,
+  customerId: string,
+  returnUrl: string,
+) {
+  return stripe.billingPortal.sessions.create(
+    { customer: customerId, return_url: returnUrl },
+    onAccount(connectedAccountId),
+  );
+}
+
+export function setSubscriptionCancelAtPeriodEnd(
+  connectedAccountId: string,
+  subscriptionId: string,
+  cancel: boolean,
+) {
+  return stripe.subscriptions.update(
+    subscriptionId,
+    { cancel_at_period_end: cancel },
+    onAccount(connectedAccountId),
+  );
+}
+
+export function pauseSubscription(connectedAccountId: string, subscriptionId: string) {
+  return stripe.subscriptions.update(
+    subscriptionId,
+    { pause_collection: { behavior: "void" } },
+    onAccount(connectedAccountId),
+  );
+}
+
+export function resumeSubscription(connectedAccountId: string, subscriptionId: string) {
+  return stripe.subscriptions.update(
+    subscriptionId,
+    { pause_collection: "" as unknown as null, cancel_at_period_end: false },
+    onAccount(connectedAccountId),
+  );
+}
+
+export function applyCouponToSubscription(
+  connectedAccountId: string,
+  subscriptionId: string,
+  couponId: string,
+) {
+  return stripe.subscriptions.update(
+    subscriptionId,
+    { discounts: [{ coupon: couponId }] },
+    onAccount(connectedAccountId),
+  );
+}
+
 // ─── Promotions ─────────────────────────────────────────────────────────────
 
 export function createCoupon(connectedAccountId: string, params: Stripe.CouponCreateParams) {

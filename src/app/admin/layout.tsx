@@ -19,6 +19,7 @@ const NAV = [
   { href: "/admin/social", label: "AI Social" },
   { href: "/admin/moderation", label: "Moderatie" },
   { href: "/admin/coupons", label: "Coupons" },
+  { href: "/admin/shop", label: "Shop" },
   { href: "/admin/segments", label: "Segmenten" },
   { href: "/admin/revenue", label: "Omzet" },
   { href: "/admin/analytics", label: "Analytics" },

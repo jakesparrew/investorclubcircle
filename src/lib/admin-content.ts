@@ -279,6 +279,33 @@ export async function addAssignment(formData: FormData) {
   revalidatePath("/admin/submissions");
 }
 
+// ─── À-la-carte course products ─────────────────────────────────────────────
+
+export async function createCourseProduct(formData: FormData) {
+  await requireAdmin();
+  const courseId = str(formData, "courseId");
+  const name = str(formData, "name");
+  const amount = centsOrNull(formData, "price");
+  if (!courseId || !name || !amount) return;
+  const o = await org();
+  const product = await db.product.create({
+    data: { orgId: o.id, name, courseId, active: true },
+  });
+  await db.price.create({
+    data: { productId: product.id, amount, currency: o.defaultCurrency, active: true },
+  });
+  revalidatePath("/admin/shop");
+}
+
+export async function toggleProductActive(formData: FormData) {
+  await requireAdmin();
+  const id = str(formData, "id");
+  if (!id) return;
+  const active = str(formData, "active") === "true";
+  await db.product.update({ where: { id }, data: { active } });
+  revalidatePath("/admin/shop");
+}
+
 export async function gradeSubmission(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN" && session?.user?.role !== "EXPERT") {

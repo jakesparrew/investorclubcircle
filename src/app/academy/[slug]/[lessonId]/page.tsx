@@ -66,7 +66,13 @@ export default async function LessonPage({
 
   const course = lesson.module.course;
   const ctx = await getAccessContext(session.user.id, session.user.role);
-  if (!canAccess(ctx, courseRequirement(course)).ok) redirect(`/academy/${slug}`);
+  if (!canAccess(ctx, courseRequirement(course)).ok) {
+    const paid = await db.enrollment.findUnique({
+      where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
+      select: { paidAccess: true },
+    });
+    if (!paid?.paidAccess) redirect(`/academy/${slug}`);
+  }
 
   const [enrollment, doneLessons, lastAttempt, modules] = await Promise.all([
     db.enrollment.findUnique({

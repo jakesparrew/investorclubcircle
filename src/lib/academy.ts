@@ -11,9 +11,19 @@ import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
 import { awardPointsOnce } from "@/lib/points";
 
-async function assertCourseAccess(session: Session, course: { isPublic: boolean; minTier: string | null }) {
+async function assertCourseAccess(
+  session: Session,
+  course: { id: string; isPublic: boolean; minTier: string | null },
+) {
   const ctx = await getAccessContext(session.user.id, session.user.role);
-  if (!canAccess(ctx, courseRequirement(course)).ok) throw new Error("Geen toegang tot deze cursus");
+  if (canAccess(ctx, courseRequirement(course)).ok) return;
+  // À-la-carte: a paid enrollment grants access regardless of tier.
+  const paid = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
+    select: { paidAccess: true },
+  });
+  if (paid?.paidAccess) return;
+  throw new Error("Geen toegang tot deze cursus");
 }
 
 async function maybeIssueCertificate(userId: string, courseId: string) {

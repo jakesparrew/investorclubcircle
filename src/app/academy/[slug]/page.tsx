@@ -7,11 +7,12 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { courseRequirement, isLessonAvailable } from "@/lib/academy-access";
 import { enrollInCourse, submitCourseReview } from "@/lib/academy";
+import { buyCourse } from "@/lib/billing";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, formatMoney } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -61,21 +62,42 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
 
   const ctx = await getAccessContext(session.user.id, session.user.role);
   if (!canAccess(ctx, courseRequirement(course)).ok) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16">
-        <Card>
-          <CardHeader>
-            <CardTitle>Geen toegang</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
-            <p>Deze cursus is voorbehouden aan {course.minTier ?? "leden"}.</p>
-            <Link href="/pricing">
-              <Button className="w-full">Bekijk lidmaatschappen</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    const paid = await db.enrollment.findUnique({
+      where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
+      select: { paidAccess: true },
+    });
+    if (!paid?.paidAccess) {
+      const product = await db.product.findFirst({
+        where: { courseId: course.id, active: true },
+        include: { prices: { where: { active: true }, take: 1 } },
+      });
+      const price = product?.prices[0] ?? null;
+      return (
+        <div className="mx-auto max-w-md px-4 py-16">
+          <Card>
+            <CardHeader>
+              <CardTitle>Geen toegang</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 text-sm text-muted-foreground">
+              <p>Deze cursus is voorbehouden aan {course.minTier ?? "leden"}.</p>
+              <Link href="/pricing">
+                <Button variant="outline" className="w-full">
+                  Bekijk lidmaatschappen
+                </Button>
+              </Link>
+              {price && (
+                <form action={buyCourse}>
+                  <input type="hidden" name="courseId" value={course.id} />
+                  <Button type="submit" variant="brand" className="w-full">
+                    Koop los voor {formatMoney(price.amount, price.currency)}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
   }
 
   const allLessons = course.modules.flatMap((m) => m.lessons);

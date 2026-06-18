@@ -18,6 +18,7 @@ import { getDashboardData } from "@/lib/dashboard";
 import { DailyCheckin } from "@/components/DailyCheckin";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { toggleNewsletterOptIn } from "@/lib/newsletter";
+import { openBillingPortal } from "@/lib/billing";
 import { AreaChart, Sparkline, Donut } from "@/components/charts/Charts";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -402,6 +403,29 @@ export default async function DashboardPage() {
             </form>
           </CardContent>
         </Card>
+
+        {d.tierKey !== "free" && (
+          <Card>
+            <CardContent className="flex flex-col gap-3 pt-6">
+              <div className="min-w-0">
+                <div className="font-medium">Abonnement</div>
+                <div className="text-sm capitalize text-muted-foreground">
+                  {d.tierName} · {d.membershipStatus}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <form action={openBillingPortal}>
+                  <Button type="submit" size="sm" variant="outline">
+                    Beheer in portaal
+                  </Button>
+                </form>
+                <Button asChild size="sm" variant="ghost">
+                  <Link href="/dashboard/cancel">Opzeggen / pauzeren</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

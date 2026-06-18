@@ -106,6 +106,21 @@ async function markOrderPaid(opts: {
       status: PaymentStatus.succeeded,
     },
   });
+
+  // À-la-carte fulfillment: if the purchased product unlocks a course, grant it.
+  if (order.productId) {
+    const product = await db.product.findUnique({
+      where: { id: order.productId },
+      select: { courseId: true },
+    });
+    if (product?.courseId) {
+      await db.enrollment.upsert({
+        where: { userId_courseId: { userId: order.userId, courseId: product.courseId } },
+        update: { paidAccess: true },
+        create: { userId: order.userId, courseId: product.courseId, paidAccess: true, source: "purchase" },
+      });
+    }
+  }
 }
 
 async function confirmRegistration(registrationId: string, paymentIntentId: string | null) {
