@@ -17,15 +17,17 @@ import { generateSocialVariants, summarizePost } from "@/lib/ai";
 import { reportContent } from "@/lib/moderation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar } from "@/components/ui/avatar";
+import { timeAgo } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 type PostDetail = Prisma.PostGetPayload<{
   include: {
-    author: { select: { name: true; email: true } };
+    author: { select: { name: true; email: true; image: true } };
     space: true;
-    comments: { include: { author: { select: { name: true; email: true } } } };
+    comments: { include: { author: { select: { name: true; email: true; image: true } } } };
     poll: { include: { options: { include: { _count: { select: { votes: true } } } } } };
   };
 }>;
@@ -44,11 +46,11 @@ export default async function PostPage({
     post = await db.post.findUnique({
       where: { id: postId },
       include: {
-        author: { select: { name: true, email: true } },
+        author: { select: { name: true, email: true, image: true } },
         space: true,
         comments: {
           where: { hiddenAt: null },
-          include: { author: { select: { name: true, email: true } } },
+          include: { author: { select: { name: true, email: true, image: true } } },
           orderBy: { createdAt: "asc" },
         },
         poll: { include: { options: { include: { _count: { select: { votes: true } } } } } },
@@ -134,8 +136,12 @@ export default async function PostPage({
 
       <article className="mt-3 rounded-xl border border-neutral-200 bg-white p-6">
         {post.title && <h1 className="text-xl font-bold break-words">{post.title}</h1>}
-        <div className="mt-1 text-xs text-neutral-400">
-          {post.author.name ?? post.author.email}
+        <div className="mt-1.5 flex items-center gap-2">
+          <Avatar src={post.author.image} name={post.author.name ?? post.author.email} size={28} />
+          <span className="min-w-0 truncate text-sm font-medium text-neutral-700">
+            {post.author.name ?? post.author.email}
+          </span>
+          <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(post.createdAt)}</span>
         </div>
         {summaryText && (
           <div className="mt-2 rounded-md bg-neutral-100 p-3 text-sm text-neutral-700">
@@ -256,10 +262,14 @@ export default async function PostPage({
           {topComments.map((comment) => (
             <div key={comment.id} className="flex flex-col gap-2">
               <div className="rounded-lg border border-neutral-200 bg-white p-4">
-                <div className="text-xs text-neutral-400">
-                  {comment.author.name ?? comment.author.email}
+                <div className="flex items-center gap-2">
+                  <Avatar src={comment.author.image} name={comment.author.name ?? comment.author.email} size={24} />
+                  <span className="min-w-0 truncate text-xs font-medium text-neutral-700">
+                    {comment.author.name ?? comment.author.email}
+                  </span>
+                  <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(comment.createdAt)}</span>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{comment.content}</p>
+                <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">{comment.content}</p>
                 <div className="mt-2 flex items-center gap-4">
                   <form action={toggleReaction}>
                     <input type="hidden" name="targetType" value="comment" />
@@ -284,10 +294,14 @@ export default async function PostPage({
 
               {(repliesByParent.get(comment.id) ?? []).map((reply) => (
                 <div key={reply.id} className="ml-6 rounded-lg border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-400">
-                    {reply.author.name ?? reply.author.email}
+                  <div className="flex items-center gap-2">
+                    <Avatar src={reply.author.image} name={reply.author.name ?? reply.author.email} size={24} />
+                    <span className="min-w-0 truncate text-xs font-medium text-neutral-700">
+                      {reply.author.name ?? reply.author.email}
+                    </span>
+                    <span className="shrink-0 text-xs text-neutral-400">· {timeAgo(reply.createdAt)}</span>
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-800">{reply.content}</p>
+                  <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-neutral-800">{reply.content}</p>
                   <form action={toggleReaction} className="mt-2">
                     <input type="hidden" name="targetType" value="comment" />
                     <input type="hidden" name="targetId" value={reply.id} />

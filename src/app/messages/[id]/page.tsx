@@ -5,14 +5,17 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { sendMessage, addGroupMember } from "@/lib/chat";
 import { ChatAutoRefresh } from "@/components/ChatAutoRefresh";
+import { ChatScroll } from "@/components/chat/ChatScroll";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 type ConversationDetail = Prisma.ConversationGetPayload<{
   include: {
-    members: { include: { user: { select: { id: true; name: true; email: true } } } };
-    messages: { include: { sender: { select: { id: true; name: true; email: true } } } };
+    members: { include: { user: { select: { id: true; name: true; email: true; image: true } } } };
+    messages: { include: { sender: { select: { id: true; name: true; email: true; image: true } } } };
   };
 }>;
 
@@ -31,10 +34,10 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     conversation = await db.conversation.findUnique({
       where: { id },
       include: {
-        members: { include: { user: { select: { id: true, name: true, email: true } } } },
+        members: { include: { user: { select: { id: true, name: true, email: true, image: true } } } },
         messages: {
           where: { deletedAt: null },
-          include: { sender: { select: { id: true, name: true, email: true } } },
+          include: { sender: { select: { id: true, name: true, email: true, image: true } } },
           orderBy: { createdAt: "desc" },
           take: 200,
         },
@@ -52,71 +55,95 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
   const me = session.user.id;
   const other = conversation.members.find((m) => m.user.id !== me);
   const title = conversation.title ?? other?.user.name ?? other?.user.email ?? "Gesprek";
+  const ordered = [...conversation.messages].reverse();
+  const lastId = ordered.length ? ordered[ordered.length - 1].id : "empty";
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col px-4 py-8">
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] max-w-2xl flex-col px-4 py-4">
       <ChatAutoRefresh />
-      <Link href="/messages" className="text-sm text-neutral-500 hover:text-neutral-900">
-        ← Berichten
-      </Link>
-      <h1 className="mt-2 mb-4 text-xl font-bold">{title}</h1>
 
-      {conversation.type === "group" && (
-        <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-3 text-sm">
-          <div className="mb-2 text-neutral-500">
-            {conversation.members.map((m) => m.user.name ?? m.user.email).join(", ")}
+      <div className="shrink-0">
+        <Link href="/messages" className="text-sm text-neutral-500 hover:text-neutral-900">
+          ← Berichten
+        </Link>
+        <h1 className="mt-1 truncate text-xl font-bold">{title}</h1>
+
+        {conversation.type === "group" && (
+          <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-3 text-sm">
+            <div className="mb-2 truncate text-neutral-500">
+              {conversation.members.map((m) => m.user.name ?? m.user.email).join(", ")}
+            </div>
+            <form action={addGroupMember} className="flex gap-2">
+              <input type="hidden" name="conversationId" value={conversation.id} />
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="Lid toevoegen (e-mail)…"
+                className="min-w-0 flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
+              />
+              <Button type="submit" size="sm" variant="outline" className="shrink-0">
+                +
+              </Button>
+            </form>
           </div>
-          <form action={addGroupMember} className="flex gap-2">
-            <input type="hidden" name="conversationId" value={conversation.id} />
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="Lid toevoegen (e-mail)…"
-              className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm"
-            />
-            <Button type="submit" size="sm" variant="outline">
-              +
-            </Button>
-          </form>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="flex flex-col gap-2">
-        {[...conversation.messages].reverse().map((msg) => {
+      <ChatScroll
+        dep={lastId}
+        className="mt-3 flex-1 space-y-2 overflow-y-auto rounded-xl border border-neutral-200 bg-neutral-50 p-4"
+      >
+        {ordered.map((msg, i) => {
           const mine = msg.sender.id === me;
+          const prev = ordered[i - 1];
+          const showMeta = !prev || prev.sender.id !== msg.sender.id;
           return (
-            <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={msg.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+              {!mine && (
+                <div className="w-7 shrink-0">
+                  {showMeta && (
+                    <Avatar src={msg.sender.image} name={msg.sender.name ?? msg.sender.email} size={28} />
+                  )}
+                </div>
+              )}
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                  mine ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-900"
+                  mine ? "bg-brand text-white" : "bg-white text-neutral-900 ring-1 ring-neutral-200"
                 }`}
               >
-                {!mine && (
-                  <div className="mb-0.5 text-xs font-medium opacity-70">
+                {!mine && showMeta && (
+                  <div className="mb-0.5 text-xs font-medium text-neutral-500">
                     {msg.sender.name ?? msg.sender.email}
                   </div>
                 )}
-                <span className="whitespace-pre-wrap">{msg.content}</span>
+                <span className="whitespace-pre-wrap break-words">{msg.content}</span>
+                <span
+                  className={`mt-0.5 block text-right text-[10px] ${mine ? "text-white/70" : "text-neutral-400"}`}
+                >
+                  {timeAgo(msg.createdAt)}
+                </span>
               </div>
             </div>
           );
         })}
-        {conversation.messages.length === 0 && (
+        {ordered.length === 0 && (
           <p className="py-8 text-center text-sm text-neutral-400">Nog geen berichten.</p>
         )}
-      </div>
+      </ChatScroll>
 
-      <form action={sendMessage} className="mt-6 flex gap-2">
+      <form action={sendMessage} className="mt-3 flex shrink-0 gap-2">
         <input type="hidden" name="conversationId" value={conversation.id} />
         <input
           name="content"
           required
           autoComplete="off"
           placeholder="Typ een bericht…"
-          className="flex-1 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+          className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
         />
-        <Button type="submit">Stuur</Button>
+        <Button type="submit" variant="brand" className="shrink-0">
+          Stuur
+        </Button>
       </form>
     </div>
   );

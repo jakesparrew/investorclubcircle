@@ -13,8 +13,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
-export default async function SpacePage({ params }: { params: Promise<{ slug: string }> }) {
+const PAGE = 25;
+
+export default async function SpacePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ limit?: string }>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const limit = Math.min(Math.max(parseInt(sp.limit ?? `${PAGE}`, 10) || PAGE, PAGE), 200);
   const session = await auth();
   if (!session?.user) redirect(`/login?callbackUrl=/community/${slug}`);
 
@@ -56,9 +66,10 @@ export default async function SpacePage({ params }: { params: Promise<{ slug: st
       _count: { select: { comments: true } },
     },
     orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
-    take: 50,
+    take: limit + 1,
   });
-  const posts: PostCardData[] = rows.map((p) => ({
+  const hasMore = rows.length > limit;
+  const posts: PostCardData[] = rows.slice(0, limit).map((p) => ({
     id: p.id,
     title: p.title,
     content: p.content,
@@ -115,6 +126,17 @@ export default async function SpacePage({ params }: { params: Promise<{ slug: st
           <p className="py-8 text-center text-sm text-neutral-400">Nog geen berichten. Wees de eerste!</p>
         )}
       </div>
+
+      {hasMore && (
+        <div className="mt-6 text-center">
+          <Link
+            href={`/community/${slug}?limit=${limit + PAGE}`}
+            className="inline-block rounded-full border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            Toon meer
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

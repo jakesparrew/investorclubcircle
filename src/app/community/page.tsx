@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -8,11 +9,21 @@ import { PostCard, type PostCardData } from "@/components/community/PostCard";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Community — InvestorClub" };
 
-export default async function CommunityPage() {
+const PAGE = 25;
+
+export default async function CommunityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ limit?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login?callbackUrl=/community");
 
+  const sp = await searchParams;
+  const limit = Math.min(Math.max(parseInt(sp.limit ?? `${PAGE}`, 10) || PAGE, PAGE), 200);
+
   let posts: PostCardData[] = [];
+  let hasMore = false;
   let dbError = false;
   try {
     const org = await db.organization.findFirst();
@@ -29,9 +40,10 @@ export default async function CommunityPage() {
             _count: { select: { comments: true } },
           },
           orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
-          take: 25,
+          take: limit + 1,
         });
-        posts = rows.map((p) => ({
+        hasMore = rows.length > limit;
+        posts = rows.slice(0, limit).map((p) => ({
           id: p.id,
           title: p.title,
           content: p.content,
@@ -71,6 +83,17 @@ export default async function CommunityPage() {
           </div>
         )}
       </div>
+
+      {hasMore && (
+        <div className="mt-6 text-center">
+          <Link
+            href={`/community?limit=${limit + PAGE}`}
+            className="inline-block rounded-full border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          >
+            Toon meer
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
