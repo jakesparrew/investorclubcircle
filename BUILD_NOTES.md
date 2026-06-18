@@ -130,3 +130,15 @@ Mogelijke verzachtingen / alternatieven om vóór de bouw te beslissen:
 
 **Beslissing voor later:** gratis + groot bereik maar host-OBS (YouTube-API) **vs** betaald + nul host-drempel
 (LiveKit/Daily). Leden/kijkers merken in beide gevallen niks — die kijken gewoon op het platform.
+
+### Verfijning (2026-06-19) — browser-streaming vs YouTube
+- **YouTube browser-webcam (YouTube Studio "Go Live → Webcam")** kan zonder OBS, MAAR dan maakt
+  YouTube het event aan, niet onze API. Een API-aangemaakte YouTube-broadcast kan je NIET met een
+  browser-webcam voeden (browser kan geen RTMP pushen). Dus "platform maakt event" + "browser-stream"
+  combineren niet via YouTube alleen.
+- **Wel samen** = een tussendienst die WebRTC/WHIP-browseringest aanneemt: **Cloudflare Stream Live,
+  Mux, LiveKit, Daily.co**. Die geven: browser-streaming zonder OBS + API om het event te maken +
+  speler embedden op platform + opname + optioneel simulcast naar YouTube. → past exact bij Gaetan's wens.
+- **Vimeo Live**: heeft API (event aanmaken kan), maar betaald abonnement (Advanced ~€65/mnd); zelfde
+  categorie als bovenstaande, duurder instap. Niet eenvoudiger.
+- **Aanrader voor "browser + platform regelt event": Cloudflare Stream of Daily.co** (usage-based).
