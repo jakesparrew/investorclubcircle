@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, User, Bookmark, Settings, LogOut, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, User, Bookmark, Settings, LogOut, Moon, Sun, ShoppingBag } from "lucide-react";
 
 type MenuUser = { id: string; name: string | null; image: string | null; role: string };
 
@@ -47,6 +47,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
   const items = [
     { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { href: `/members/${user.id}`, label: "Mijn profiel", Icon: User },
+    { href: "/dashboard/my-products", label: "Mijn aankopen", Icon: ShoppingBag },
     { href: "/bookmarks", label: "Bewaard", Icon: Bookmark },
     { href: "/profile/edit", label: "Profiel bewerken", Icon: Settings },
   ];

@@ -23,7 +23,7 @@ import { AreaChart, Sparkline, Donut } from "@/components/charts/Charts";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, formatMoney } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +69,19 @@ function Delta({ pct }: { pct: number }) {
   );
 }
 
-export default async function DashboardPage() {
+const SUBSCRIPTION_MSG: Record<string, string> = {
+  cancelling: "Je abonnement loopt af aan het einde van de periode.",
+  resumed: "Welkom terug — je abonnement loopt weer door.",
+  paused: "Je abonnement is gepauzeerd.",
+  discount_applied: "Korting toegepast — fijn dat je blijft! 🎁",
+};
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ order?: string; purchase?: string; subscription?: string }>;
+}) {
+  const sp = await searchParams;
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -89,9 +101,31 @@ export default async function DashboardPage() {
 
   const firstName = session.user.name?.split(" ")[0] ?? "daar";
 
+  const r = d.renewal;
+  const renewalLine = r
+    ? r.isTrial && r.periodEnd
+      ? `Proefperiode — eindigt ${new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long" }).format(r.periodEnd)}`
+      : r.cancelAtPeriodEnd && r.periodEnd
+        ? `Stopt op ${new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long" }).format(r.periodEnd)}`
+        : r.periodEnd
+          ? `Vernieuwt${r.amountCents ? ` voor ${formatMoney(r.amountCents)}` : ""} op ${new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long" }).format(r.periodEnd)}`
+          : null
+    : null;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <DailyCheckin />
+
+      {(sp.order === "success" || sp.purchase === "success") && (
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-3 text-sm font-medium text-primary">
+          ✓ Aankoop gelukt — je toegang is ontgrendeld.
+        </div>
+      )}
+      {sp.subscription && SUBSCRIPTION_MSG[sp.subscription] && (
+        <div className="mb-4 rounded-lg border border-border bg-muted p-3 text-sm">
+          {SUBSCRIPTION_MSG[sp.subscription]}
+        </div>
+      )}
 
       {/* Greeting */}
       <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -184,6 +218,23 @@ export default async function DashboardPage() {
           </div>
         </Kpi>
       </div>
+
+      {d.badges.length > 0 && (
+        <div className="mb-8 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Badges
+          </span>
+          {d.badges.map((b) => (
+            <span
+              key={b.name}
+              title={b.name}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium"
+            >
+              <span>{b.icon}</span> {b.name}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -412,6 +463,9 @@ export default async function DashboardPage() {
                 <div className="text-sm capitalize text-muted-foreground">
                   {d.tierName} · {d.membershipStatus}
                 </div>
+                {renewalLine && (
+                  <div className="mt-0.5 text-xs text-muted-foreground">{renewalLine}</div>
+                )}
               </div>
               <div className="flex flex-wrap gap-2">
                 <form action={openBillingPortal}>

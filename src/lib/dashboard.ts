@@ -13,6 +13,14 @@ export type DashboardData = {
   tierKey: string;
   tierName: string;
   membershipStatus: string;
+  renewal: {
+    periodEnd: Date | null;
+    interval: string | null;
+    cancelAtPeriodEnd: boolean;
+    amountCents: number | null;
+    isTrial: boolean;
+  } | null;
+  badges: { name: string; icon: string }[];
   coursePct: number;
   pointsSeries: number[];
   pointsWeekDeltaPct: number;
@@ -41,7 +49,7 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
   const org = await db.organization.findFirst();
   const ctx = await getAccessContext(userId, role);
 
-  const [points, streak, membership, ledger, enrollments, progressRows, events, leaderboard, levels] =
+  const [points, streak, membership, ledger, enrollments, progressRows, events, leaderboard, levels, badgeRows] =
     await Promise.all([
       getUserTotalPoints(userId),
       getLoginStreak(userId),
@@ -68,6 +76,12 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
       org
         ? db.level.findMany({ where: { orgId: org.id }, orderBy: { minPoints: "asc" } })
         : Promise.resolve([]),
+      db.userBadge.findMany({
+        where: { userId },
+        include: { badge: { select: { name: true, icon: true } } },
+        orderBy: { awardedAt: "desc" },
+        take: 12,
+      }),
     ]);
 
   // 30-day cumulative points series.
@@ -158,6 +172,18 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
     }
   }
 
+  const renewal = membership
+    ? {
+        periodEnd: membership.currentPeriodEnd,
+        interval: membership.interval,
+        cancelAtPeriodEnd: membership.cancelAtPeriodEnd,
+        amountCents:
+          membership.interval === "year" ? membership.tier.priceYearly : membership.tier.priceMonthly,
+        isTrial: membership.status === "trialing",
+      }
+    : null;
+  const badges = badgeRows.map((b) => ({ name: b.badge.name, icon: b.badge.icon ?? "🏅" }));
+
   return {
     orgId: org?.id ?? null,
     points,
@@ -165,6 +191,8 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
     tierKey: membership?.tier.key ?? "free",
     tierName: membership?.tier.name ?? "Gratis",
     membershipStatus: membership?.status ?? "geen abonnement",
+    renewal,
+    badges,
     coursePct,
     pointsSeries,
     pointsWeekDeltaPct,
