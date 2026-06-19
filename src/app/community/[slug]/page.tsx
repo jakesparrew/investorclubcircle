@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
@@ -7,6 +8,7 @@ import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { createPost } from "@/lib/community";
 import { PostCard, type PostCardData } from "@/components/community/PostCard";
+import { FeedSort } from "@/components/community/FeedSort";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,11 +22,16 @@ export default async function SpacePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ limit?: string }>;
+  searchParams: Promise<{ limit?: string; sort?: string }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
   const limit = Math.min(Math.max(parseInt(sp.limit ?? `${PAGE}`, 10) || PAGE, PAGE), 200);
+  const sort = sp.sort === "popular" ? "popular" : "new";
+  const orderBy: Prisma.PostOrderByWithRelationInput[] =
+    sort === "popular"
+      ? [{ comments: { _count: "desc" } }, { createdAt: "desc" }]
+      : [{ pinned: "desc" }, { createdAt: "desc" }];
   const session = await auth();
   if (!session?.user) redirect(`/login?callbackUrl=/community/${slug}`);
 
@@ -65,7 +72,7 @@ export default async function SpacePage({
       author: { select: { name: true, email: true, image: true } },
       _count: { select: { comments: true } },
     },
-    orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+    orderBy,
     take: limit + 1,
   });
   const hasMore = rows.length > limit;
@@ -123,7 +130,11 @@ export default async function SpacePage({
         </CardContent>
       </Card>
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6">
+        <FeedSort basePath={`/community/${slug}`} sort={sort} />
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3">
         {posts.map((p) => (
           <PostCard key={p.id} post={p} showSpace={false} />
         ))}
@@ -135,7 +146,7 @@ export default async function SpacePage({
       {hasMore && (
         <div className="mt-6 text-center">
           <Link
-            href={`/community/${slug}?limit=${limit + PAGE}`}
+            href={`/community/${slug}?sort=${sort}&limit=${limit + PAGE}`}
             className="inline-block rounded-full border border-input bg-card px-5 py-2 text-sm font-medium text-foreground hover:bg-muted"
           >
             Toon meer

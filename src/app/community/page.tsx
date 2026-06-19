@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { listAccessibleSpaceGroups } from "@/lib/spaces";
 import { PostCard, type PostCardData } from "@/components/community/PostCard";
+import { FeedSort } from "@/components/community/FeedSort";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Community — InvestorClub" };
@@ -14,13 +16,18 @@ const PAGE = 25;
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ limit?: string }>;
+  searchParams: Promise<{ limit?: string; sort?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login?callbackUrl=/community");
 
   const sp = await searchParams;
   const limit = Math.min(Math.max(parseInt(sp.limit ?? `${PAGE}`, 10) || PAGE, PAGE), 200);
+  const sort = sp.sort === "popular" ? "popular" : "new";
+  const orderBy: Prisma.PostOrderByWithRelationInput[] =
+    sort === "popular"
+      ? [{ comments: { _count: "desc" } }, { createdAt: "desc" }]
+      : [{ pinned: "desc" }, { createdAt: "desc" }];
 
   let posts: PostCardData[] = [];
   let hasMore = false;
@@ -39,7 +46,7 @@ export default async function CommunityPage({
             space: { select: { name: true, slug: true } },
             _count: { select: { comments: true } },
           },
-          orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+          orderBy,
           take: limit + 1,
         });
         hasMore = rows.length > limit;
@@ -64,7 +71,10 @@ export default async function CommunityPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="text-xl font-bold">Feed</h1>
-      <p className="mb-6 text-sm text-muted-foreground">De laatste berichten uit je spaces.</p>
+      <p className="mb-4 text-sm text-muted-foreground">De laatste berichten uit je spaces.</p>
+      <div className="mb-6">
+        <FeedSort basePath="/community" sort={sort} />
+      </div>
 
       {dbError && (
         <p className="mb-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
@@ -87,7 +97,7 @@ export default async function CommunityPage({
       {hasMore && (
         <div className="mt-6 text-center">
           <Link
-            href={`/community?limit=${limit + PAGE}`}
+            href={`/community?sort=${sort}&limit=${limit + PAGE}`}
             className="inline-block rounded-full border border-input bg-card px-5 py-2 text-sm font-medium text-foreground hover:bg-muted"
           >
             Toon meer
