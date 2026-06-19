@@ -11,6 +11,7 @@ import { spaceRequirement } from "@/lib/spaces";
 import { awardPoints, awardPointsOnce, POINTS } from "@/lib/points";
 import { REACTION_TYPES } from "@/lib/reactions";
 import { notify } from "@/lib/notify";
+import { completeOnboardingStep } from "@/lib/onboarding-progress";
 
 async function requireSession(): Promise<Session> {
   const session = await auth();
@@ -38,6 +39,8 @@ export async function createPost(formData: FormData) {
     data: { spaceId, authorId: session.user.id, title, content },
   });
   await awardPoints(session.user.id, POINTS.post, "post", "post", post.id);
+  // Auto-complete the "first post" onboarding step (idempotent, non-blocking).
+  await completeOnboardingStep(session.user.id, "first_post").catch(() => null);
 
   // Optional poll attached to the post.
   const pollQuestion = String(formData.get("pollQuestion") ?? "").trim();

@@ -16,6 +16,11 @@ function message(n: Notification): { text: string; link?: string } {
   if (n.type === "comment") return { text: `${by} reageerde op ${p.title ?? "je post"}`, link: p.link };
   if (n.type === "reply") return { text: `${by} antwoordde op je reactie`, link: p.link };
   if (n.type === "message") return { text: `${by} stuurde je een bericht`, link: p.link };
+  if (n.type === "event_promoted")
+    return {
+      text: `🎟️ Je bent van de wachtlijst gehaald${p.title ? ` voor ${p.title}` : ""} — je plek is bevestigd!`,
+      link: p.link,
+    };
   if (n.type === "announcement")
     return { text: `📣 ${p.title ?? "Aankondiging"}${p.body ? ` — ${p.body}` : ""}`, link: p.link };
   return { text: n.type, link: p.link };

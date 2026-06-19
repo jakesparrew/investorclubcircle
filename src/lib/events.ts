@@ -11,6 +11,7 @@ import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { stripe, onAccount, APP_FEE_PERCENT } from "@/lib/stripe";
 import { optionalEnv } from "@/lib/env";
+import { notify } from "@/lib/notify";
 
 function appUrl() {
   return optionalEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
@@ -123,6 +124,68 @@ export async function registerForEvent(formData: FormData) {
   }
 
   revalidatePath(`/events/${event.slug}`);
+}
+
+/** Member cancels their own registration: refunds any payment and promotes the waitlist. */
+export async function cancelRegistration(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const eventId = String(formData.get("eventId") ?? "");
+  if (!eventId) return;
+
+  const reg = await db.registration.findUnique({
+    where: { eventId_userId: { eventId, userId: session.user.id } },
+    include: { event: { include: { org: true } } },
+  });
+  if (!reg) return;
+  if (reg.status === "cancelled" || reg.status === "refunded") {
+    redirect(`/events/${reg.event.slug}`);
+  }
+  if (reg.event.startsAt.getTime() < Date.now()) {
+    throw new Error("Het event is al begonnen — annuleren kan niet meer.");
+  }
+
+  const freedConfirmedSeat = reg.status === "confirmed" || reg.status === "pending";
+
+  // Refund a paid deposit/ticket if we charged one.
+  if (
+    reg.amount &&
+    reg.amount > 0 &&
+    reg.stripePaymentIntentId &&
+    reg.event.org.stripeConnectedAccountId &&
+    reg.status !== "waitlisted"
+  ) {
+    try {
+      await stripe.refunds.create(
+        { payment_intent: reg.stripePaymentIntentId, refund_application_fee: true },
+        onAccount(reg.event.org.stripeConnectedAccountId),
+      );
+    } catch (err) {
+      console.error("[events] cancel refund failed:", err);
+    }
+  }
+
+  await db.registration.update({ where: { id: reg.id }, data: { status: "cancelled" } });
+
+  // A confirmed seat freed up → promote the first person on the waitlist.
+  if (freedConfirmedSeat) {
+    const next = await db.registration.findFirst({
+      where: { eventId, status: "waitlisted" },
+      orderBy: { waitlistPosition: "asc" },
+    });
+    if (next) {
+      await db.registration.update({
+        where: { id: next.id },
+        data: { status: "confirmed", waitlistPosition: null },
+      });
+      await notify(next.userId, "event_promoted", {
+        link: `/events/${reg.event.slug}`,
+        title: reg.event.title,
+      });
+    }
+  }
+
+  redirect(`/events/${reg.event.slug}?registered=cancelled`);
 }
 
 /** Host/admin checks a registrant in; refunds the deposit on attendance. */

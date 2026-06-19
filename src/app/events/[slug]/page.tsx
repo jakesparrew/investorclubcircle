@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
-import { registerForEvent } from "@/lib/events";
+import { registerForEvent, cancelRegistration } from "@/lib/events";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ type EventDetail = Prisma.EventGetPayload<{ include: { host: { select: { name: t
 const REGISTERED_COPY: Record<string, string> = {
   success: "Je inschrijving is bevestigd. Tot dan!",
   waitlist: "Het event is vol — je staat op de wachtlijst.",
-  cancelled: "Betaling geannuleerd — je bent niet ingeschreven.",
+  cancelled: "Je inschrijving is geannuleerd.",
 };
 
 export default async function EventPage({
@@ -215,11 +215,23 @@ export default async function EventPage({
               )}
 
               {registration ? (
-                <Badge variant={registration.status === "waitlisted" ? "warning" : "success"}>
-                  {registration.status === "waitlisted"
-                    ? `Wachtlijst #${registration.waitlistPosition}`
-                    : `Ingeschreven (${registration.status})`}
-                </Badge>
+                <div className="flex flex-col gap-2">
+                  <Badge variant={registration.status === "waitlisted" ? "warning" : "success"}>
+                    {registration.status === "waitlisted"
+                      ? `Wachtlijst #${registration.waitlistPosition}`
+                      : `Ingeschreven (${registration.status})`}
+                  </Badge>
+                  {!isPast &&
+                    registration.status !== "cancelled" &&
+                    registration.status !== "refunded" && (
+                      <form action={cancelRegistration}>
+                        <input type="hidden" name="eventId" value={event.id} />
+                        <Button type="submit" variant="ghost" size="sm">
+                          Annuleer inschrijving
+                        </Button>
+                      </form>
+                    )}
+                </div>
               ) : (
                 <form action={registerForEvent}>
                   <input type="hidden" name="eventId" value={event.id} />

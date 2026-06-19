@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Tier } from "@prisma/client";
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { startSubscriptionCheckout } from "@/lib/billing";
 import { Button } from "@/components/ui/button";
@@ -20,11 +21,20 @@ export default async function PricingPage({
   const sp = await searchParams;
   const yearly = sp.billing === "yearly";
   const interval: "month" | "year" = yearly ? "year" : "month";
+  const session = await auth();
 
   let tiers: Tier[] = [];
+  let currentKey: string | null = null;
   let dbError = false;
   try {
     tiers = await db.tier.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } });
+    if (session?.user) {
+      const m = await db.membership.findFirst({
+        where: { userId: session.user.id, status: { in: ["active", "trialing"] } },
+        include: { tier: true },
+      });
+      currentKey = m?.tier.key ?? "free";
+    }
   } catch {
     dbError = true;
   }
@@ -68,6 +78,7 @@ export default async function PricingPage({
         {tiers.map((tier) => {
           const recommended = tier.key === RECOMMENDED;
           const isFree = tier.key === "free";
+          const isCurrent = currentKey != null && currentKey === tier.key;
           const price = yearly ? tier.priceYearly : tier.priceMonthly;
           const perks = Array.isArray(tier.perks) ? (tier.perks as string[]) : [];
           const savings =
@@ -77,12 +88,12 @@ export default async function PricingPage({
           return (
             <Card
               key={tier.id}
-              className={`relative flex flex-col ${recommended ? "border-brand shadow-md ring-1 ring-brand" : ""}`}
+              className={`relative flex flex-col ${isCurrent ? "border-primary ring-1 ring-primary" : recommended ? "border-brand shadow-md ring-1 ring-brand" : ""}`}
             >
-              {recommended && (
+              {(recommended || isCurrent) && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge variant="default" className="bg-brand">
-                    Meest gekozen
+                    {isCurrent ? "Je huidige plan" : "Meest gekozen"}
                   </Badge>
                 </span>
               )}
@@ -115,16 +126,22 @@ export default async function PricingPage({
                     </ul>
                   )}
                 </div>
-                <form action={startSubscriptionCheckout.bind(null, tier.id, interval)}>
-                  <Button
-                    type="submit"
-                    variant={isFree ? "outline" : "brand"}
-                    className="w-full"
-                    disabled={isFree || (price == null && !isFree)}
-                  >
-                    {isFree ? "Standaard" : "Word lid"}
+                {isCurrent ? (
+                  <Button variant="outline" className="w-full" disabled>
+                    Je huidige plan
                   </Button>
-                </form>
+                ) : (
+                  <form action={startSubscriptionCheckout.bind(null, tier.id, interval)}>
+                    <Button
+                      type="submit"
+                      variant={isFree ? "outline" : "brand"}
+                      className="w-full"
+                      disabled={isFree || (price == null && !isFree)}
+                    >
+                      {isFree ? "Standaard" : currentKey && currentKey !== "free" ? "Wissel naar dit plan" : "Word lid"}
+                    </Button>
+                  </form>
+                )}
               </CardContent>
             </Card>
           );
