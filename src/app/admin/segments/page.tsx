@@ -82,9 +82,23 @@ export default async function AdminSegmentsPage({
       )}
 
       <div className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-3 text-sm">
-          <span className="text-2xl font-bold">{result.count}</span>{" "}
-          <span className="text-muted-foreground">leden in dit segment</span>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="text-sm">
+            <span className="text-2xl font-bold">{result.count}</span>{" "}
+            <span className="text-muted-foreground">leden in dit segment</span>
+          </div>
+          {result.count > 0 && (
+            <a
+              href={`/api/admin/export/segment?${new URLSearchParams({
+                ...(filter.tier ? { tier: filter.tier } : {}),
+                ...(filter.tagId ? { tagId: filter.tagId } : {}),
+                ...(filter.activity ? { activity: filter.activity } : {}),
+              })}`}
+              className="shrink-0 rounded-md border border-input bg-card px-3 py-1.5 text-sm font-medium hover:bg-muted"
+            >
+              ⬇ CSV
+            </a>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {result.sample.map((u) => (
