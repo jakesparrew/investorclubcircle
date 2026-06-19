@@ -30,6 +30,11 @@ export type DashboardData = {
   events: { id: string; title: string; slug: string; startsAt: Date; location: string | null }[];
   leaderboard: LeaderboardRow[];
   myRank: number | null;
+  recentContent: {
+    livestream: { id: string; title: string; status: string } | null;
+    podcasts: { id: string; title: string }[];
+    newsletter: { id: string; subject: string } | null;
+  };
   activity: {
     id: string;
     title: string | null;
@@ -49,8 +54,21 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
   const org = await db.organization.findFirst();
   const ctx = await getAccessContext(userId, role);
 
-  const [points, streak, membership, ledger, enrollments, progressRows, events, leaderboard, levels, badgeRows] =
-    await Promise.all([
+  const [
+    points,
+    streak,
+    membership,
+    ledger,
+    enrollments,
+    progressRows,
+    events,
+    leaderboard,
+    levels,
+    badgeRows,
+    latestStream,
+    recentPodcasts,
+    latestNewsletter,
+  ] = await Promise.all([
       getUserTotalPoints(userId),
       getLoginStreak(userId),
       db.membership.findFirst({
@@ -81,6 +99,21 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
         include: { badge: { select: { name: true, icon: true } } },
         orderBy: { awardedAt: "desc" },
         take: 12,
+      }),
+      db.livestream.findFirst({
+        where: { status: { in: ["live", "scheduled"] } },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, status: true },
+      }),
+      db.podcastEpisode.findMany({
+        orderBy: { publishedAt: "desc" },
+        take: 3,
+        select: { id: true, title: true },
+      }),
+      db.newsletterIssue.findFirst({
+        where: { status: "sent" },
+        orderBy: { sentAt: "desc" },
+        select: { id: true, subject: true },
       }),
     ]);
 
@@ -202,6 +235,11 @@ export async function getDashboardData(userId: string, role: Role): Promise<Dash
     events,
     leaderboard,
     myRank,
+    recentContent: {
+      livestream: latestStream,
+      podcasts: recentPodcasts,
+      newsletter: latestNewsletter,
+    },
     activity,
   };
 }

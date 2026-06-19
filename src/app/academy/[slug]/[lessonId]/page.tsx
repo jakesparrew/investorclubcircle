@@ -99,6 +99,11 @@ export default async function LessonPage({
   }
   const isDone = completed.has(lesson.id);
   const video = normalizeVideoUrl(lesson.videoUrl);
+  const lastResults = new Map<string, boolean>(
+    Array.isArray(lastAttempt?.details)
+      ? (lastAttempt.details as { id: string; correct: boolean }[]).map((d) => [d.id, d.correct])
+      : [],
+  );
 
   const flat = modules.flatMap((m) => m.lessons);
   const idx = flat.findIndex((l) => l.id === lesson.id);
@@ -216,7 +221,19 @@ export default async function LessonPage({
                 <input type="hidden" name="quizId" value={lesson.quiz.id} />
                 {lesson.quiz.questions.map((q) => (
                   <fieldset key={q.id} className="flex flex-col gap-2">
-                    <legend className="mb-1 text-sm font-medium">{q.prompt}</legend>
+                    <legend className="mb-1 flex items-center gap-2 text-sm font-medium">
+                      {lastResults.has(q.id) &&
+                        (lastResults.get(q.id) ? (
+                          <span className="text-emerald-600" title="Vorige poging: juist">
+                            ✓
+                          </span>
+                        ) : (
+                          <span className="text-red-600" title="Vorige poging: fout">
+                            ✗
+                          </span>
+                        ))}
+                      <span>{q.prompt}</span>
+                    </legend>
                     {q.answers.map((a) => (
                       <label key={a.id} className="flex items-center gap-2 text-sm">
                         <input

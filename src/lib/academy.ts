@@ -132,22 +132,25 @@ export async function submitQuiz(formData: FormData) {
   }
 
   let correct = 0;
+  const details: { id: string; correct: boolean }[] = [];
   for (const q of quiz.questions) {
     const correctIds = q.answers
       .filter((a) => a.isCorrect)
       .map((a) => a.id)
       .sort();
-    if (correctIds.length === 0) continue; // ungradeable (no correct answer) — never counts as correct
     const selected = formData.getAll(`q_${q.id}`).map(String).sort();
     const isCorrect =
-      correctIds.length === selected.length && correctIds.every((id, i) => id === selected[i]);
+      correctIds.length > 0 &&
+      correctIds.length === selected.length &&
+      correctIds.every((id, i) => id === selected[i]);
+    details.push({ id: q.id, correct: isCorrect });
     if (isCorrect) correct++;
   }
   const total = quiz.questions.length || 1;
   const score = Math.round((correct / total) * 100);
   const passed = score >= quiz.passPercent;
 
-  await db.quizAttempt.create({ data: { userId: session.user.id, quizId, score, passed } });
+  await db.quizAttempt.create({ data: { userId: session.user.id, quizId, score, passed, details } });
 
   if (passed) {
     await db.lessonProgress.upsert({

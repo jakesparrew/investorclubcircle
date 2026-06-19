@@ -151,6 +151,7 @@ model User {
   role          Role      @default(MEMBER)
   suspendedUntil DateTime?
   createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime?
 
   accounts            Account[]
   sessions            Session[]
@@ -193,6 +194,8 @@ model User {
   // Chat (Fase 3)
   conversationMemberships ConversationMember[]
   messages                Message[]
+  blocking                BlockedUser[]        @relation("Blocker")
+  blockedBy               BlockedUser[]        @relation("Blocked")
 
   // Content (Fase 5)
   newsletterOptIn Boolean      @default(false)
@@ -1030,6 +1033,7 @@ model QuizAttempt {
   quizId      String
   score       Int
   passed      Boolean
+  details     Json? // [{ id: questionId, correct: boolean }]
   submittedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1176,6 +1180,18 @@ model Message {
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
+}
+
+model BlockedUser {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // ─── Content-instroom (Fase 5) ──────────────────────────────────────────────

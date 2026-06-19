@@ -398,6 +398,49 @@ export default async function DashboardPage({
             </div>
           )}
 
+          {/* Recent content across channels */}
+          {(d.recentContent.livestream ||
+            d.recentContent.podcasts.length > 0 ||
+            d.recentContent.newsletter) && (
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+              <div className="border-b border-border px-5 py-4">
+                <h2 className="font-semibold">Nieuwe content</h2>
+              </div>
+              <div className="divide-y divide-border">
+                {d.recentContent.livestream && (
+                  <Link
+                    href={`/live/${d.recentContent.livestream.id}`}
+                    className="flex items-center gap-2 px-5 py-3 text-sm hover:bg-muted/50"
+                  >
+                    <span>🔴</span>
+                    <span className="min-w-0 flex-1 truncate">{d.recentContent.livestream.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {d.recentContent.livestream.status === "live" ? "live" : "binnenkort"}
+                    </span>
+                  </Link>
+                )}
+                {d.recentContent.podcasts.map((p) => (
+                  <Link
+                    key={p.id}
+                    href="/podcast"
+                    className="flex items-center gap-2 px-5 py-3 text-sm hover:bg-muted/50"
+                  >
+                    <span>🎙️</span>
+                    <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                  </Link>
+                ))}
+                {d.recentContent.newsletter && (
+                  <div className="flex items-center gap-2 px-5 py-3 text-sm text-muted-foreground">
+                    <span>✉️</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {d.recentContent.newsletter.subject}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Leaderboard */}
           <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
