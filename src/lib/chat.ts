@@ -6,6 +6,65 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { notify } from "@/lib/notify";
 
+/** Internal: is there a block in either direction between two users? */
+async function blockedBetween(a: string, b: string): Promise<boolean> {
+  return Boolean(
+    await db.blockedUser.findFirst({
+      where: { OR: [{ blockerId: a, blockedId: b }, { blockerId: b, blockedId: a }] },
+    }),
+  );
+}
+
+/** Block a user — prevents new DMs and messages in either direction. */
+export async function blockUser(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId || userId === session.user.id) return;
+  await db.blockedUser.upsert({
+    where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: userId } },
+    update: {},
+    create: { blockerId: session.user.id, blockedId: userId },
+  });
+  revalidatePath(`/members/${userId}`);
+}
+
+export async function unblockUser(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return;
+  await db.blockedUser
+    .delete({ where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: userId } } })
+    .catch(() => null);
+  revalidatePath(`/members/${userId}`);
+}
+
+/** Edit one of your own messages. */
+export async function editMessage(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const messageId = String(formData.get("messageId") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
+  if (!messageId || !content) return;
+  const msg = await db.message.findUnique({ where: { id: messageId } });
+  if (!msg || msg.senderId !== session.user.id || msg.deletedAt) return;
+  await db.message.update({ where: { id: messageId }, data: { content, editedAt: new Date() } });
+  revalidatePath(`/messages/${msg.conversationId}`);
+}
+
+/** Soft-delete one of your own messages. */
+export async function deleteMessage(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const messageId = String(formData.get("messageId") ?? "");
+  if (!messageId) return;
+  const msg = await db.message.findUnique({ where: { id: messageId } });
+  if (!msg || msg.senderId !== session.user.id) return;
+  await db.message.update({ where: { id: messageId }, data: { deletedAt: new Date() } });
+  revalidatePath(`/messages/${msg.conversationId}`);
+}
+
 /** Start (or reuse) a 1-on-1 conversation with a user identified by email. */
 export async function startDirectByEmail(formData: FormData) {
   const session = await auth();
@@ -18,6 +77,8 @@ export async function startDirectByEmail(formData: FormData) {
   const other = await db.user.findUnique({ where: { email } });
   if (!other) throw new Error("Geen gebruiker met dat e-mailadres");
   if (other.id === session.user.id) throw new Error("Je kunt jezelf geen bericht sturen");
+  if (await blockedBetween(session.user.id, other.id))
+    throw new Error("Berichten met dit lid zijn geblokkeerd.");
 
   const mine = await db.conversation.findMany({
     where: { type: "direct", members: { some: { userId: session.user.id } } },
@@ -51,6 +112,8 @@ export async function startDirectByUserId(formData: FormData) {
 
   const other = await db.user.findUnique({ where: { id: otherId } });
   if (!other) return;
+  if (await blockedBetween(session.user.id, otherId))
+    throw new Error("Berichten met dit lid zijn geblokkeerd.");
 
   const mine = await db.conversation.findMany({
     where: { type: "direct", members: { some: { userId: session.user.id } } },
@@ -86,6 +149,17 @@ export async function sendMessage(formData: FormData) {
     where: { conversationId_userId: { conversationId, userId: session.user.id } },
   });
   if (!membership) throw new Error("Geen toegang tot dit gesprek");
+
+  const convo = await db.conversation.findUnique({
+    where: { id: conversationId },
+    include: { members: { select: { userId: true } } },
+  });
+  if (convo?.type === "direct") {
+    const other = convo.members.find((m) => m.userId !== session.user.id);
+    if (other && (await blockedBetween(session.user.id, other.userId))) {
+      throw new Error("Berichten met dit lid zijn geblokkeerd.");
+    }
+  }
 
   await db.message.create({ data: { conversationId, senderId: session.user.id, content } });
   await db.conversationMember.update({

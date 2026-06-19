@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { startDirectByUserId } from "@/lib/chat";
+import { startDirectByUserId, blockUser, unblockUser } from "@/lib/chat";
 import { getUserTotalPoints, getLevelForPoints } from "@/lib/points";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,13 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
   const org = await db.organization.findFirst();
   const level = org ? await getLevelForPoints(org.id, points) : null;
   const isSelf = member.id === session.user.id;
+  const blocked =
+    !isSelf &&
+    Boolean(
+      await db.blockedUser.findUnique({
+        where: { blockerId_blockedId: { blockerId: session.user.id, blockedId: member.id } },
+      }),
+    );
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -64,10 +71,20 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
             </Button>
           </Link>
         ) : (
-          <form action={startDirectByUserId}>
-            <input type="hidden" name="userId" value={member.id} />
-            <Button size="sm">Bericht</Button>
-          </form>
+          <div className="flex shrink-0 items-center gap-2">
+            {!blocked && (
+              <form action={startDirectByUserId}>
+                <input type="hidden" name="userId" value={member.id} />
+                <Button size="sm">Bericht</Button>
+              </form>
+            )}
+            <form action={blocked ? unblockUser : blockUser}>
+              <input type="hidden" name="userId" value={member.id} />
+              <Button size="sm" variant="ghost">
+                {blocked ? "Deblokkeer" : "Blokkeer"}
+              </Button>
+            </form>
+          </div>
         )}
       </div>
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { sendMessage, addGroupMember } from "@/lib/chat";
+import { sendMessage, addGroupMember, editMessage, deleteMessage } from "@/lib/chat";
 import { ChatAutoRefresh } from "@/components/ChatAutoRefresh";
 import { ChatScroll } from "@/components/chat/ChatScroll";
 import { Avatar } from "@/components/ui/avatar";
@@ -127,9 +127,42 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
                 )}
                 <span className="whitespace-pre-wrap break-words">{msg.content}</span>
                 <span
-                  className={`mt-0.5 block text-right text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}
+                  className={`mt-0.5 flex items-center justify-end gap-2 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}
                 >
-                  {timeAgo(msg.createdAt)}
+                  {msg.editedAt && <span>(bewerkt)</span>}
+                  <span>{timeAgo(msg.createdAt)}</span>
+                  {mine && (
+                    <>
+                      <details className="relative">
+                        <summary className="cursor-pointer list-none" aria-label="Bewerk">
+                          ✎
+                        </summary>
+                        <form
+                          action={editMessage}
+                          className="absolute right-0 z-10 mt-1 flex w-52 flex-col gap-1 rounded-md border border-border bg-card p-2 text-foreground shadow-lg"
+                        >
+                          <input type="hidden" name="messageId" value={msg.id} />
+                          <input
+                            name="content"
+                            defaultValue={msg.content}
+                            className="rounded border border-input bg-background px-2 py-1 text-xs"
+                          />
+                          <button
+                            type="submit"
+                            className="rounded bg-brand px-2 py-1 text-[10px] font-medium text-white"
+                          >
+                            Bewaar
+                          </button>
+                        </form>
+                      </details>
+                      <form action={deleteMessage}>
+                        <input type="hidden" name="messageId" value={msg.id} />
+                        <button type="submit" aria-label="Verwijder">
+                          🗑
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </span>
               </div>
             </div>
