@@ -21,6 +21,12 @@ function message(n: Notification): { text: string; link?: string } {
       text: `🎟️ Je bent van de wachtlijst gehaald${p.title ? ` voor ${p.title}` : ""} — je plek is bevestigd!`,
       link: p.link,
     };
+  if (n.type === "event_reminder")
+    return { text: `⏰ Herinnering: ${p.title ?? "je event"} start binnenkort`, link: p.link };
+  if (n.type === "payment_failed")
+    return { text: `⚠️ Je betaling is mislukt — herstel je betaalmethode`, link: p.link };
+  if (n.type === "streak_at_risk")
+    return { text: `🔥 Je reeks staat op het spel — check vandaag nog in!`, link: p.link };
   if (n.type === "announcement")
     return { text: `📣 ${p.title ?? "Aankondiging"}${p.body ? ` — ${p.body}` : ""}`, link: p.link };
   return { text: n.type, link: p.link };
