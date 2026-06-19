@@ -10,26 +10,26 @@ and where the friction is. Three cross-cutting themes drove the priorities:
 3. **No job/cron yet.** Anything time-triggered (event reminders, dunning, streak-at-risk) needs a
    Vercel Cron endpoint first — hence those are "bigger bets".
 
-## Quick wins (high impact, S/M effort) — implement first
+## Quick wins (high impact, S/M effort) — ✅ = shipped 2026-06-19
 
-| # | Area | Improvement |
-|---|------|-------------|
-| 1 | Monetization | Trial countdown + renewal date/amount on dashboard |
-| 2 | Shell | Past-due payment alert banner (recover silent churn) |
-| 3 | Gamification | Render earned badges + award a badge on onboarding completion |
-| 4 | Chat | In-app notification on every new DM/group message |
-| 5 | Community | Feed sort options (recent / trending / hot) |
-| 6 | Members | Directory sort + tier/role filter chips |
-| 7 | Admin | Member search + tier/date/status filters + pagination |
-| 8 | Admin | CSV export (members, revenue, segments, submissions) |
-| 9 | Monetization | Order-success confirmation + "Mijn aankopen" page |
-| 10 | Monetization | Personalize pricing page for logged-in members (current plan + upgrade delta) |
-| 11 | Shell | Per-notification read + type filter on notifications page |
-| 12 | Academy | Per-question quiz review + partial-credit breakdown |
-| 13 | Events | Self-service registrant cancellation with auto-refund |
-| 14 | Events | Waitlist auto-promotion on cancellation |
-| 15 | Onboarding | Auto-mark onboarding steps when the user actually does them |
-| 16 | Content | Cross-channel "Recent content" widget on dashboard |
+| # | Area | Improvement | Status |
+|---|------|-------------|--------|
+| 1 | Monetization | Trial countdown + renewal date/amount on dashboard | ✅ |
+| 2 | Shell | Past-due payment alert banner (recover silent churn) | ✅ |
+| 3 | Gamification | Render earned badges + award a badge on onboarding completion | ✅ |
+| 4 | Chat | In-app notification on every new DM/group message | ✅ |
+| 5 | Community | Feed sort options (nieuw / populair) | ✅ |
+| 6 | Members | Directory sort + tier/role filter chips | ✅ |
+| 7 | Admin | Member search + tier/date/status filters + pagination | ✅ |
+| 8 | Admin | CSV export (members + segments) | ✅ |
+| 9 | Monetization | Order-success confirmation + "Mijn aankopen" page | ✅ |
+| 10 | Monetization | Personalize pricing page for logged-in members | ✅ |
+| 11 | Shell | Per-notification read + type filter on notifications page | ✅ |
+| 12 | Academy | Per-question quiz review + partial-credit breakdown | ⏳ (needs QuizAttempt.details column) |
+| 13 | Events | Self-service registrant cancellation with auto-refund | ✅ |
+| 14 | Events | Waitlist auto-promotion on cancellation | ✅ |
+| 15 | Onboarding | Auto-mark onboarding steps when the user actually does them | ✅ (first_post) |
+| 16 | Content | Cross-channel "Recent content" widget on dashboard | ⏳ |
 
 ## Bigger bets (high impact, L effort) — after quick wins
 
