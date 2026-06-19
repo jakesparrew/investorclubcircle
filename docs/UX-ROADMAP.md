@@ -31,12 +31,12 @@ and where the friction is. Three cross-cutting themes drove the priorities:
 | 15 | Onboarding | Auto-mark onboarding steps when the user actually does them | ✅ (first_post) |
 | 16 | Content | Cross-channel "Recent content" widget on dashboard | ⏳ |
 
-## Bigger bets (high impact, L effort) — after quick wins
+## Bigger bets (high impact, L effort)
 
-- `lastActiveAt` + engagement momentum + admin at-risk detection (retention ops)
-- Per-course completion & lesson drop-off analytics
-- Cron infrastructure → event reminders + dunning emails + streak-at-risk
-- Revenue cohort analytics (MRR trend, churn by tier, LTV by cohort)
-- Instructor self-service role with per-course ownership
-- Block/mute + message edit/soft-delete + conversation search
-- Content performance analytics (views/plays/opens) across channels
+- ✅ `lastActiveAt` + admin at-risk detection (retention ops) — bumped on check-in; At-risk KPI + admin "actief X"
+- ✅ Cron infrastructure → event reminders + dunning emails + streak-at-risk (`/api/cron`, `vercel.json`, `lib/mail`)
+- ✅ Revenue cohort analytics — churn-by-tier + at-risk shipped (MRR-trend still needs a historical snapshot table)
+- ✅ Block/mute + message edit/soft-delete (conversation search still open)
+- ⏳ Per-course completion & lesson drop-off analytics (needs LessonAttempt timing model)
+- ⏳ Instructor self-service role with per-course ownership (needs CourseInstructor model + access.ts guard)
+- ⏳ Content performance analytics (views/plays/opens) across channels (needs view/listen beacons)
