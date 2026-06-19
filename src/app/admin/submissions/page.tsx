@@ -118,7 +118,7 @@ export default async function AdminSubmissionsPage() {
                   </label>
                   <label className="flex flex-col gap-1 text-xs text-muted-foreground">
                     Cijfer
-                    <Input name="grade" type="number" defaultValue={s.grade ?? ""} className="h-9 w-20" />
+                    <Input name="grade" type="number" min="0" max="100" defaultValue={s.grade ?? ""} className="h-9 w-20" />
                   </label>
                   <input
                     name="feedback"

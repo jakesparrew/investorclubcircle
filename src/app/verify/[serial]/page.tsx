@@ -43,7 +43,7 @@ export default async function VerifyCertificatePage({
           <CardContent className="flex flex-col items-center gap-1 py-10 text-center">
             <div className="text-5xl">🎓</div>
             <p className="mt-2 text-sm text-muted-foreground">Dit certificaat bevestigt dat</p>
-            <h1 className="text-2xl font-bold">{cert.user.name ?? cert.user.email}</h1>
+            <h1 className="text-2xl font-bold">{cert.user.name ?? "Certificaathouder"}</h1>
             <p className="text-sm text-muted-foreground">met succes de cursus voltooide</p>
             <p className="text-lg font-semibold text-primary">{cert.course.title}</p>
             <div className="mt-4 text-xs text-muted-foreground">

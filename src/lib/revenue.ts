@@ -43,8 +43,9 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
   let trialingCount = 0;
   let churningCount = 0;
   for (const m of memberships) {
-    const monthly =
-      m.interval === "year" ? Math.round((m.tier.priceYearly ?? 0) / 12) : m.tier.priceMonthly ?? 0;
+    // Keep the per-member contribution unrounded; round only the aggregates
+    // below so yearly→monthly conversion doesn't accumulate rounding drift.
+    const monthly = m.interval === "year" ? (m.tier.priceYearly ?? 0) / 12 : m.tier.priceMonthly ?? 0;
     mrrCents += monthly;
     if (m.status === "trialing") trialingCount++;
     if (m.cancelAtPeriodEnd) churningCount++;
@@ -68,8 +69,8 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
   }
 
   return {
-    mrrCents,
-    arrCents: mrrCents * 12,
+    mrrCents: Math.round(mrrCents),
+    arrCents: Math.round(mrrCents * 12),
     activeCount,
     trialingCount,
     pastDueCount,
@@ -77,7 +78,11 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     churnRate,
     arpuCents,
     ltvCents,
-    byTier: [...byTierMap.entries()].map(([name, v]) => ({ name, ...v })),
+    byTier: [...byTierMap.entries()].map(([name, v]) => ({
+      name,
+      count: v.count,
+      mrrCents: Math.round(v.mrrCents),
+    })),
     signupsWeekly,
     totalMembers,
     enrollments,

@@ -113,6 +113,7 @@ export async function submitQuiz(formData: FormData) {
     },
   });
   if (!quiz) return;
+  if (quiz.questions.length === 0) throw new Error("Deze quiz heeft nog geen vragen.");
   const course = quiz.lesson.module.course;
   await assertCourseAccess(session, course);
 
@@ -164,9 +165,10 @@ export async function submitCourseReview(formData: FormData) {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const courseId = String(formData.get("courseId") ?? "");
-  const rating = Math.max(0, Math.min(5, parseInt(String(formData.get("rating") ?? ""), 10) || 0));
+  const ratingRaw = parseInt(String(formData.get("rating") ?? ""), 10);
   const body = String(formData.get("body") ?? "").trim() || null;
-  if (!courseId || !rating) return;
+  if (!courseId || Number.isNaN(ratingRaw)) return;
+  const rating = Math.max(1, Math.min(5, ratingRaw));
 
   const course = await db.course.findUnique({ where: { id: courseId } });
   if (!course) return;
@@ -195,7 +197,13 @@ export async function submitAssignment(formData: FormData) {
     include: { lesson: { include: { module: { include: { course: true } } } } },
   });
   if (!assignment) return;
-  await assertCourseAccess(session, assignment.lesson.module.course);
+  const aCourse = assignment.lesson.module.course;
+  await assertCourseAccess(session, aCourse);
+
+  const aEnrollment = await db.enrollment.findUnique({
+    where: { userId_courseId: { userId: session.user.id, courseId: aCourse.id } },
+  });
+  if (!aEnrollment) throw new Error("Schrijf je eerst in voor deze cursus");
 
   await db.assignmentSubmission.upsert({
     where: { assignmentId_userId: { assignmentId, userId: session.user.id } },

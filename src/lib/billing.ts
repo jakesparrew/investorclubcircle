@@ -181,8 +181,8 @@ export async function startProductCheckout(productId: string, priceId: string) {
   if (!session?.user) redirect("/login");
 
   const org = await requireConnectedOrg();
-  const product = await db.product.findUnique({ where: { id: productId } });
-  if (!product || !product.active) throw new Error("Product niet beschikbaar");
+  const product = await db.product.findFirst({ where: { id: productId, orgId: org.id, active: true } });
+  if (!product) throw new Error("Product niet beschikbaar");
 
   const price = await db.price.findUnique({ where: { id: priceId } });
   // Validate the price actually belongs to this product (prevents price manipulation).

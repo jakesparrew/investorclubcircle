@@ -307,14 +307,12 @@ export async function toggleProductActive(formData: FormData) {
 }
 
 export async function gradeSubmission(formData: FormData) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "EXPERT") {
-    throw new Error("Forbidden");
-  }
+  await requireAdmin();
   const id = str(formData, "submissionId");
   const statusRaw = str(formData, "status");
   const status = ["approved", "needs_work", "submitted"].includes(statusRaw) ? statusRaw : "submitted";
-  const grade = intOrNull(formData, "grade");
+  const gradeRaw = intOrNull(formData, "grade");
+  const grade = gradeRaw === null ? null : Math.max(0, Math.min(100, gradeRaw));
   const feedback = str(formData, "feedback") || null;
   if (!id) return;
   await db.assignmentSubmission.update({

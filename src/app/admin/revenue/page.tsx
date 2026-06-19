@@ -48,8 +48,8 @@ export default async function AdminRevenuePage() {
         <Kpi label="Totaal leden" value={`${m.totalMembers}`} hint="alle accounts" />
         <Kpi
           label="Cursus-voltooiing"
-          value={`${(m.completionRate * 100).toFixed(0)}%`}
-          hint={`${m.certificates}/${m.enrollments} inschrijvingen`}
+          value={m.enrollments ? `${(m.completionRate * 100).toFixed(0)}%` : "—"}
+          hint={m.enrollments ? `${m.certificates}/${m.enrollments} inschrijvingen` : "nog geen inschrijvingen"}
         />
         <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

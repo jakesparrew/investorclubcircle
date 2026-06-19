@@ -43,10 +43,14 @@ async function upsertMembershipFromSubscription(sub: Stripe.Subscription) {
   if (!tierId && item?.price?.id) {
     const matched = await db.tier.findFirst({
       where: {
+        ...(orgId ? { orgId } : {}),
         OR: [{ stripePriceMonthlyId: item.price.id }, { stripePriceYearlyId: item.price.id }],
       },
     });
     tierId = matched?.id;
+    if (!tierId) {
+      console.warn(`[stripe sync] no tier matched price ${item.price.id} for sub ${sub.id} — skipped`);
+    }
   }
   if (!userId || !orgId || !tierId) return;
 
