@@ -5,6 +5,7 @@ import { setUserRoleAction } from "@/lib/admin";
 import { requireAdminPage } from "@/lib/guards";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -150,7 +151,10 @@ export default async function AdminMembersPage({
                     {u.name && <div className="text-muted-foreground">{u.name}</div>}
                   </td>
                   <td className="py-3 pr-4 text-muted-foreground">
-                    {new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(u.createdAt)}
+                    <div>{new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium" }).format(u.createdAt)}</div>
+                    {u.lastActiveAt && (
+                      <div className="text-xs">actief {timeAgo(u.lastActiveAt)}</div>
+                    )}
                   </td>
                   <td className="py-3 pr-4">
                     {membership ? (

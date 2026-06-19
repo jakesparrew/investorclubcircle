@@ -45,6 +45,11 @@ export default async function AdminRevenuePage() {
           hint={`${m.churningCount} zegt op`}
         />
         <Kpi label="LTV" value={formatMoney(m.ltvCents)} hint="ARPU ÷ churn" />
+        <Kpi
+          label="At-risk"
+          value={`${m.atRiskCount}`}
+          hint="betalend lid, 14d geen activiteit"
+        />
         <Kpi label="Totaal leden" value={`${m.totalMembers}`} hint="alle accounts" />
         <Kpi
           label="Cursus-voltooiing"
@@ -76,8 +81,9 @@ export default async function AdminRevenuePage() {
                   style={{ width: `${Math.round((t.mrrCents / maxTierMrr) * 100)}%` }}
                 />
               </div>
-              <span className="w-28 shrink-0 text-right text-sm text-muted-foreground">
+              <span className="w-36 shrink-0 text-right text-sm text-muted-foreground">
                 {formatMoney(t.mrrCents)} · {t.count}
+                {t.churning > 0 && <span className="text-amber-600"> · {t.churning} opzeg</span>}
               </span>
             </div>
           ))}

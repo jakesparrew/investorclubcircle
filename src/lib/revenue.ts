@@ -12,7 +12,8 @@ export type RevenueMetrics = {
   churnRate: number;
   arpuCents: number;
   ltvCents: number;
-  byTier: { name: string; count: number; mrrCents: number }[];
+  atRiskCount: number;
+  byTier: { name: string; count: number; mrrCents: number; churning: number }[];
   signupsWeekly: number[];
   totalMembers: number;
   enrollments: number;
@@ -22,7 +23,7 @@ export type RevenueMetrics = {
 
 /** Operator KPIs computed from the live DB (no Stripe calls needed). */
 export async function getRevenueMetrics(): Promise<RevenueMetrics> {
-  const [memberships, pastDueCount, totalMembers, enrollments, certificates, recentUsers] =
+  const [memberships, pastDueCount, totalMembers, enrollments, certificates, recentUsers, atRiskCount] =
     await Promise.all([
       db.membership.findMany({
         where: { status: { in: ["active", "trialing"] } },
@@ -36,10 +37,17 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
         where: { createdAt: { gte: new Date(Date.now() - 8 * 7 * DAY) } },
         select: { createdAt: true },
       }),
+      // Active/trialing members with zero activity in the last 14 days.
+      db.user.count({
+        where: {
+          memberships: { some: { status: { in: ["active", "trialing"] } } },
+          points: { none: { createdAt: { gte: new Date(Date.now() - 14 * DAY) } } },
+        },
+      }),
     ]);
 
   let mrrCents = 0;
-  const byTierMap = new Map<string, { count: number; mrrCents: number }>();
+  const byTierMap = new Map<string, { count: number; mrrCents: number; churning: number }>();
   let trialingCount = 0;
   let churningCount = 0;
   for (const m of memberships) {
@@ -49,9 +57,10 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     mrrCents += monthly;
     if (m.status === "trialing") trialingCount++;
     if (m.cancelAtPeriodEnd) churningCount++;
-    const t = byTierMap.get(m.tier.name) ?? { count: 0, mrrCents: 0 };
+    const t = byTierMap.get(m.tier.name) ?? { count: 0, mrrCents: 0, churning: 0 };
     t.count++;
     t.mrrCents += monthly;
+    if (m.cancelAtPeriodEnd) t.churning++;
     byTierMap.set(m.tier.name, t);
   }
 
@@ -78,10 +87,12 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     churnRate,
     arpuCents,
     ltvCents,
+    atRiskCount,
     byTier: [...byTierMap.entries()].map(([name, v]) => ({
       name,
       count: v.count,
       mrrCents: Math.round(v.mrrCents),
+      churning: v.churning,
     })),
     signupsWeekly,
     totalMembers,
