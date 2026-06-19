@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { UserMenu } from "@/components/app/UserMenu";
 import { CommandPalette } from "@/components/app/CommandPalette";
+import { openBillingPortal } from "@/lib/billing";
 
 type SpaceItem = { name: string; slug: string; accessible: boolean };
 type Group = { name: string; spaces: SpaceItem[] };
@@ -47,11 +48,13 @@ export function AppShell({
   user,
   groups,
   unread,
+  pastDue,
   children,
 }: {
   user: ShellUser;
   groups: Group[];
   unread?: Unread;
+  pastDue?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -140,6 +143,22 @@ export function AppShell({
           </div>
         </div>
       </header>
+
+      {pastDue && (
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
+            <span>⚠️ Je laatste betaling is mislukt — herstel je betaling om volledige toegang te houden.</span>
+            <form action={openBillingPortal}>
+              <button
+                type="submit"
+                className="shrink-0 rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"
+              >
+                Herstel betaling
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="flex">
         <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-border bg-surface px-3 py-4 lg:block">

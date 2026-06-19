@@ -26,6 +26,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   let groups: { name: string; spaces: { name: string; slug: string; accessible: boolean }[] }[] = [];
   let unread: UnreadCounts = { messages: 0, notifications: 0 };
+  let pastDue = false;
   if (session?.user) {
     try {
       const org = await db.organization.findFirst();
@@ -38,6 +39,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         }));
       }
       unread = await getUnreadCounts(session.user.id);
+      pastDue = Boolean(
+        await db.membership.findFirst({
+          where: { userId: session.user.id, status: "past_due" },
+          select: { id: true },
+        }),
+      );
     } catch {
       // DB not connected — render shell without spaces.
     }
@@ -63,6 +70,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             }}
             groups={groups}
             unread={unread}
+            pastDue={pastDue}
           >
             {children}
           </AppShell>

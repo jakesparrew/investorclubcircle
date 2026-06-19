@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { notify } from "@/lib/notify";
 
 /** Start (or reuse) a 1-on-1 conversation with a user identified by email. */
 export async function startDirectByEmail(formData: FormData) {
@@ -91,6 +92,17 @@ export async function sendMessage(formData: FormData) {
     where: { conversationId_userId: { conversationId, userId: session.user.id } },
     data: { lastReadAt: new Date() },
   });
+
+  // Notify the other participants so chat isn't a silent channel.
+  const others = await db.conversationMember.findMany({
+    where: { conversationId, userId: { not: session.user.id } },
+    select: { userId: true },
+  });
+  const by = session.user.name ?? session.user.email ?? "Iemand";
+  await Promise.all(
+    others.map((o) => notify(o.userId, "message", { by, link: `/messages/${conversationId}` })),
+  );
+
   revalidatePath(`/messages/${conversationId}`);
   revalidatePath("/messages");
 }
