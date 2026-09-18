@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { getAccessContext } from "@/lib/access-context";
 import { listAccessibleSpaceGroups } from "@/lib/spaces";
 import { getUnreadCounts, type UnreadCounts } from "@/lib/unread";
+import { syncYoutubeLive } from "@/lib/youtube-live";
 
 export const metadata: Metadata = {
   title: "InvestorClub — Community & Academy",
@@ -27,6 +28,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   let groups: { name: string; spaces: { name: string; slug: string; accessible: boolean }[] }[] = [];
   let unread: UnreadCounts = { messages: 0, notifications: 0 };
   let pastDue = false;
+  let liveId: string | null = null;
   if (session?.user) {
     try {
       const org = await db.organization.findFirst();
@@ -38,6 +40,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           spaces: x.spaces.map((s) => ({ name: s.name, slug: s.slug, accessible: s.accessible })),
         }));
       }
+      liveId = await syncYoutubeLive();
       unread = await getUnreadCounts(session.user.id);
       pastDue = Boolean(
         await db.membership.findFirst({
@@ -71,6 +74,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             groups={groups}
             unread={unread}
             pastDue={pastDue}
+            liveId={liveId}
           >
             {children}
           </AppShell>

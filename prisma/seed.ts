@@ -278,18 +278,8 @@ async function main() {
     });
   }
 
-  // MOCK podcast episodes (audioUrl is fake) + one livestream recording (real public video as placeholder).
-  const demoEpisodes = [
-    { id: "demo_ep_1", title: "Aflevering 1 — Marktupdate", description: "De crypto-week in 20 minuten.", audioUrl: "https://example.com/podcast/ep1.mp3" },
-    { id: "demo_ep_2", title: "Aflevering 2 — DeFi diepduik", description: "Alles over staking & yield.", audioUrl: "https://example.com/podcast/ep2.mp3" },
-  ];
-  for (const e of demoEpisodes) {
-    await db.podcastEpisode.upsert({
-      where: { id: e.id },
-      update: {},
-      create: { id: e.id, orgId: org.id, title: e.title, description: e.description, audioUrl: e.audioUrl },
-    });
-  }
+  // Podcast episodes come from the real RSS feed (lib/podcast.ts), not the seed.
+  // One livestream recording (real public video as placeholder).
 
   await db.livestream.upsert({
     where: { id: "demo_stream_1" },

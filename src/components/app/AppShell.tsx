@@ -49,12 +49,14 @@ export function AppShell({
   groups,
   unread,
   pastDue,
+  liveId,
   children,
 }: {
   user: ShellUser;
   groups: Group[];
   unread?: Unread;
   pastDue?: boolean;
+  liveId?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -143,6 +145,15 @@ export function AppShell({
           </div>
         </div>
       </header>
+
+      {liveId && pathname !== `/live/${liveId}` && (
+        <Link
+          href={`/live/${liveId}`}
+          className="block border-b border-red-300 bg-red-50 px-4 py-2 text-center text-sm font-medium text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+        >
+          🔴 We zijn nu live — kijk mee →
+        </Link>
+      )}
 
       {pastDue && (
         <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">

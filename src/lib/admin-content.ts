@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { QuestionType } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { syncPodcast } from "@/lib/podcast";
 
 async function requireAdmin() {
   const session = await auth();
@@ -171,6 +172,13 @@ export async function addPodcastEpisode(formData: FormData) {
   await db.podcastEpisode.create({
     data: { orgId: o.id, title, audioUrl, description: str(formData, "description") || null },
   });
+  revalidatePath("/admin/podcast");
+  revalidatePath("/podcast");
+}
+
+export async function syncPodcastFeed() {
+  await requireAdmin();
+  await syncPodcast();
   revalidatePath("/admin/podcast");
   revalidatePath("/podcast");
 }

@@ -36,9 +36,24 @@ export default async function PodcastPage() {
       <div className="flex flex-col gap-4">
         {episodes.map((e) => (
           <div key={e.id} className="rounded-xl border border-border bg-card p-5">
-            <div className="font-semibold">{e.title}</div>
-            <div className="mb-3 text-xs text-muted-foreground">{fmtDate(e.publishedAt)}</div>
-            {e.description && <p className="mb-3 text-sm text-muted-foreground">{e.description}</p>}
+            <div className="mb-3 flex gap-4">
+              {e.imageUrl && (
+                <img src={e.imageUrl} alt="" loading="lazy" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+              )}
+              <div className="min-w-0">
+                <div className="font-semibold break-words">{e.title}</div>
+                <div className="text-xs text-muted-foreground">
+                  {fmtDate(e.publishedAt)}
+                  {e.duration && ` · ${e.duration}`}
+                </div>
+              </div>
+            </div>
+            {e.description && (
+              <details className="mb-3 text-sm text-muted-foreground">
+                <summary className="cursor-pointer font-medium text-foreground">Shownotes</summary>
+                <p className="mt-2 whitespace-pre-line break-words">{e.description}</p>
+              </details>
+            )}
             <audio controls preload="none" src={e.audioUrl} className="w-full">
               Je browser ondersteunt geen audio.
             </audio>

@@ -1306,9 +1306,13 @@ model PodcastEpisode {
   description String?
   audioUrl    String
   publishedAt DateTime @default(now())
+  guid        String? // RSS <guid>; null = manually added
+  imageUrl    String?
+  duration    String? // as given by the feed, e.g. "01:42:18"
 
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
+  @@unique([orgId, guid])
   @@index([orgId])
 }
 

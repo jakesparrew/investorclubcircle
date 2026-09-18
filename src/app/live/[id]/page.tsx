@@ -6,6 +6,7 @@ import { getAccessContext } from "@/lib/access-context";
 import { canAccess } from "@/lib/access";
 import { spaceRequirement } from "@/lib/spaces";
 import { Badge } from "@/components/ui/badge";
+import { normalizeVideoUrl } from "@/lib/video";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,10 @@ export default async function StreamPage({ params }: { params: Promise<{ id: str
   const ctx = await getAccessContext(session.user.id, session.user.role);
   if (!canAccess(ctx, spaceRequirement(stream)).ok) redirect("/pricing");
 
-  const url = stream.status === "ended" && stream.recordingUrl ? stream.recordingUrl : stream.embedUrl;
+  // YouTube keeps the replay at the same URL, so recordingUrl is only an override.
+  const video = normalizeVideoUrl(
+    stream.status === "ended" && stream.recordingUrl ? stream.recordingUrl : stream.embedUrl,
+  );
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -44,12 +48,16 @@ export default async function StreamPage({ params }: { params: Promise<{ id: str
       {stream.description && <p className="mt-1 text-muted-foreground">{stream.description}</p>}
 
       <div className="mt-4 aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
-        <iframe
-          src={url}
-          className="h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
+        {video?.kind === "file" ? (
+          <video src={video.src} controls className="h-full w-full" />
+        ) : (
+          <iframe
+            src={video?.src}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        )}
       </div>
     </div>
   );

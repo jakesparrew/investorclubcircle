@@ -28,7 +28,7 @@ export default async function AdminStreamsPage() {
           <h2 className="mb-3 font-semibold">Nieuwe livestream</h2>
           <form action={createStream} className="flex flex-col gap-3">
             <Input name="title" placeholder="Titel" required />
-            <Input name="embedUrl" placeholder="YouTube embed-URL (https://www.youtube.com/embed/…)" required />
+            <Input name="embedUrl" placeholder="YouTube-link (gewone link uit YouTube Studio volstaat)" required />
             <Input name="description" placeholder="Beschrijving (optioneel)" />
             <div className="flex items-center gap-4 text-sm">
               <label className="flex items-center gap-2">

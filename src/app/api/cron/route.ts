@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { sendEmail, emailLayout } from "@/lib/mail";
+import { syncPodcast } from "@/lib/podcast";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -129,5 +130,8 @@ export async function GET(req: Request) {
     result.streakAtRisk++;
   }
 
-  return Response.json({ ok: true, ranAt: now.toISOString(), ...result });
+  // Cron runs daily (06:00 UTC, Vercel Hobby limit); admin has a manual sync button.
+  const podcast = await syncPodcast().catch((e: Error) => ({ error: e.message }));
+
+  return Response.json({ ok: true, ranAt: now.toISOString(), ...result, podcast });
 }

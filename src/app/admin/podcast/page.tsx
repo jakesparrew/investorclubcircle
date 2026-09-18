@@ -1,7 +1,8 @@
 import type { PodcastEpisode } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdminPage } from "@/lib/guards";
-import { addPodcastEpisode } from "@/lib/admin-content";
+import { addPodcastEpisode, syncPodcastFeed } from "@/lib/admin-content";
+import { PODCAST_RSS_URL } from "@/lib/podcast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,22 @@ export default async function AdminPodcastPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+          <div className="min-w-0">
+            <h2 className="font-semibold">RSS-feed</h2>
+            <p className="truncate text-xs text-muted-foreground">
+              {PODCAST_RSS_URL} — checkt elke ochtend op nieuwe afleveringen
+            </p>
+          </div>
+          <form action={syncPodcastFeed}>
+            <Button type="submit" variant="outline">
+              Nu synchroniseren
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="pt-6">
           <h2 className="mb-3 font-semibold">Nieuwe aflevering</h2>

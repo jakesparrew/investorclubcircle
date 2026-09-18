@@ -55,6 +55,18 @@ export async function setStreamStatus(formData: FormData) {
     throw new Error("Forbidden");
   }
   await db.livestream.update({ where: { id }, data: { status: status as StreamStatus } });
+
+  if (status === "live" && stream.status !== "live") {
+    // Everyone gets the ping; members without access land on /pricing (fine as an upsell).
+    const users = await db.user.findMany({ select: { id: true } });
+    await db.notification.createMany({
+      data: users.map((u) => ({
+        userId: u.id,
+        type: "announcement",
+        payload: { title: `🔴 Nu live: ${stream.title}`, body: "Kom erbij!", link: `/live/${id}` },
+      })),
+    });
+  }
   revalidatePath("/admin/streams");
   revalidatePath("/live");
   revalidatePath(`/live/${id}`);

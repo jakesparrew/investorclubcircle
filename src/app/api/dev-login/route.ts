@@ -13,15 +13,21 @@ export const runtime = "nodejs";
  *   /api/dev-login                              -> log in as the admin
  *   /api/dev-login?email=sven@demo.investorclub.be -> log in as a demo member
  */
+const DEMO_DOMAIN = "@demo.investorclub.be";
+
 export async function GET(req: Request) {
-  if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEV_LOGIN !== "true") {
-    return new Response("Not found", { status: 404 });
-  }
+  const prod = process.env.NODE_ENV === "production";
+  // Local: any seeded user (ALLOW_DEV_LOGIN). Production: only seeded demo members, never
+  // admins, and only when ALLOW_DEMO_LOGIN=true — the public demo site's "try it" login.
+  const allowed = prod ? process.env.ALLOW_DEMO_LOGIN === "true" : process.env.ALLOW_DEV_LOGIN === "true";
+  if (!allowed) return new Response("Not found", { status: 404 });
 
   const url = new URL(req.url);
-  const email = url.searchParams.get("email") ?? "gaetanjansseune@gmail.com";
+  const email = url.searchParams.get("email") ?? (prod ? `lara${DEMO_DOMAIN}` : "gaetanjansseune@gmail.com");
+  if (prod && !email.endsWith(DEMO_DOMAIN)) return new Response("Not found", { status: 404 });
 
   const user = await db.user.findUnique({ where: { email } });
+  if (prod && user?.role === "ADMIN") return new Response("Not found", { status: 404 });
   if (!user) {
     return new Response(`Geen gebruiker met e-mail ${email}. Draai eerst: npm run db:seed`, {
       status: 404,
@@ -33,8 +39,11 @@ export async function GET(req: Request) {
   await db.session.create({ data: { sessionToken, userId: user.id, expires } });
 
   const store = await cookies();
-  store.set("authjs.session-token", sessionToken, {
+  // Auth.js uses the __Secure- prefixed cookie on https.
+  const secure = url.protocol === "https:";
+  store.set(secure ? "__Secure-authjs.session-token" : "authjs.session-token", sessionToken, {
     httpOnly: true,
+    secure,
     sameSite: "lax",
     path: "/",
     expires,
